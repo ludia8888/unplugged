@@ -6,10 +6,12 @@
 (function (global) {
   'use strict';
 
-  const STORAGE_KEY  = 'unplugged:v1';
-  const SESSION_KEY  = 'unplugged:session';
-  const PASSWORD_KEY = 'unplugged:pw';
-  const THEME_KEY    = 'unplugged:theme';
+  const STORAGE_KEY     = 'unplugged:v1';
+  const SESSION_KEY     = 'unplugged:session';
+  const PASSWORD_KEY    = 'unplugged:pw';
+  const THEME_KEY       = 'unplugged:theme';
+  const VID_KEY         = 'unplugged:vid';
+  const ADMIN_TOKEN_KEY = 'unplugged:admintoken';
 
   /* ── Defaults ─────────────────────────────────────────── */
 
@@ -574,6 +576,88 @@
     return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
   }
 
+  /* ── Visitor ID (anonymous, per-browser) ──────────────── */
+
+  function getVisitorId() {
+    let v = localStorage.getItem(VID_KEY);
+    if (!v || v.length < 6) {
+      const rand = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : (Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
+      v = rand.replace(/[^A-Za-z0-9._-]/g, '').slice(0, 64);
+      localStorage.setItem(VID_KEY, v);
+    }
+    return v;
+  }
+
+  /* ── Admin token (moderation) ─────────────────────────── */
+
+  function getAdminToken() {
+    return sessionStorage.getItem(ADMIN_TOKEN_KEY) || '';
+  }
+  function setAdminToken(t) {
+    if (t) sessionStorage.setItem(ADMIN_TOKEN_KEY, t);
+    else sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  }
+
+  /* ── API ─────────────────────────────────────────────── */
+
+  async function apiJson(url, opts = {}) {
+    const init = Object.assign({ headers: { 'content-type': 'application/json' } }, opts);
+    if (init.body && typeof init.body !== 'string') init.body = JSON.stringify(init.body);
+    const r = await fetch(url, init);
+    let data = null;
+    try { data = await r.json(); } catch { /* may be empty */ }
+    if (!r.ok) {
+      const err = new Error((data && data.error) || `HTTP ${r.status}`);
+      err.status = r.status;
+      err.data = data;
+      throw err;
+    }
+    return data || {};
+  }
+
+  const api = {
+    likes: {
+      get: (ids) => {
+        const list = Array.isArray(ids) ? ids : [ids];
+        const q = new URLSearchParams({ ids: list.join(','), vid: getVisitorId() });
+        return apiJson(`/api/likes?${q.toString()}`);
+      },
+      toggle: (id) =>
+        apiJson(`/api/likes?id=${encodeURIComponent(id)}`, {
+          method: 'POST',
+          body: { vid: getVisitorId() },
+        }),
+    },
+    comments: {
+      list: (id) =>
+        apiJson(`/api/comments?id=${encodeURIComponent(id)}`),
+      post: (id, { name, body }) =>
+        apiJson(`/api/comments?id=${encodeURIComponent(id)}`, {
+          method: 'POST',
+          body: { name, body },
+        }),
+    },
+    admin: {
+      listComments: () =>
+        apiJson('/api/admin/comments', {
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${getAdminToken()}` },
+        }),
+      deleteComment: (cid) =>
+        apiJson(`/api/admin/comments?id=${encodeURIComponent(cid)}`, {
+          method: 'DELETE',
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${getAdminToken()}` },
+        }),
+      toggleHide: (cid, hidden) =>
+        apiJson(`/api/admin/comments?id=${encodeURIComponent(cid)}`, {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${getAdminToken()}` },
+          body: { hidden: !!hidden },
+        }),
+    },
+  };
+
   /* ── Export ───────────────────────────────────────────── */
 
   global.UnpluggedStore = {
@@ -592,6 +676,8 @@
     readImageFile, storageUsage,
     // theme
     getStoredTheme, setStoredTheme, resolvedTheme, applyTheme, toggleTheme, initThemeToggle,
+    // community
+    getVisitorId, getAdminToken, setAdminToken, api,
     // auth
     hasPassword, setPassword, checkPassword, login, logout, isLoggedIn,
     // utils

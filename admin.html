@@ -1095,6 +1095,76 @@
     margin-top: 8px;
   }
 
+  /* ─── Comments moderation list ───────────────────── */
+  .cmod-list { display: flex; flex-direction: column; }
+  .cmod-row {
+    display: grid;
+    grid-template-columns: 140px 1fr auto;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 18px 12px;
+    border-bottom: 1px solid var(--hairline-soft);
+    transition: background .2s;
+  }
+  .cmod-row:hover { background: var(--paper-warm); }
+  .cmod-row.is-hidden { opacity: .55; }
+  .cmod-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    line-height: 1.6;
+  }
+  .cmod-meta strong {
+    color: var(--ink);
+    font-family: var(--italic);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 15px;
+    display: block;
+    letter-spacing: 0;
+    text-transform: none;
+    margin-bottom: 4px;
+  }
+  .cmod-body {
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-width: 64ch;
+  }
+  .cmod-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .cmod-row .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink);
+    padding: 3px 8px;
+    border-radius: 100px;
+    margin-top: 6px;
+    background: var(--paper-shade);
+  }
+  .cmod-row.is-hidden .pill { background: var(--danger); color: var(--paper); }
+
+  @media (max-width: 700px) {
+    .cmod-row { grid-template-columns: 1fr; gap: 10px; padding: 16px 8px; }
+  }
+
+  /* Admin token field in Account */
+  .admin-token-note {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-muted);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
   /* ─── Toast + modal ──────────────────────────────────── */
   .toast {
     position: fixed;
@@ -1286,6 +1356,7 @@
       <ul class="nav-list" id="navList">
         <li><button data-panel="essays" class="active">Essays <span class="count" id="navEssayCount"></span></button></li>
         <li><button data-panel="categories">Categories <span class="count" id="navCatCount"></span></button></li>
+        <li><button data-panel="comments">Comments <span class="count" id="navCommentCount"></span></button></li>
         <li><button data-panel="listening">Listening room</button></li>
         <li><button data-panel="masthead">Masthead & epigraph</button></li>
         <li><button data-panel="notes">Margin notes</button></li>
@@ -1508,6 +1579,22 @@
         <div class="cat-list" id="catList"></div>
       </section>
 
+      <!-- ─── Panel: Comments ────────────────────────── -->
+      <section class="panel" data-panel="comments">
+        <div class="panel-head">
+          <div>
+            <h2>Notes in the margin</h2>
+            <div class="hint">Every reader's mark — keep, hide, or delete.</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn ghost small" id="refreshComments">Refresh</button>
+          </div>
+        </div>
+
+        <div id="commentsNotice" class="empty" style="display:none;"></div>
+        <div class="cmod-list" id="cmodList"></div>
+      </section>
+
       <!-- ─── Panel: Listening room ──────────────────── -->
       <section class="panel" data-panel="listening">
         <div class="panel-head">
@@ -1669,6 +1756,23 @@
           </div>
 
           <div class="settings-section">
+            <h3>Moderation token</h3>
+            <div class="section-hint">Required to load and delete comments</div>
+            <div class="field">
+              <label for="admin_token">Bearer token</label>
+              <input type="password" id="admin_token" autocomplete="off" placeholder="matches ADMIN_TOKEN in Vercel env">
+              <div class="admin-token-note">
+                Kept only in this browser session. Should equal the <code>ADMIN_TOKEN</code>
+                you set under Vercel → Project → Settings → Environment Variables.
+              </div>
+            </div>
+            <div class="settings-actions">
+              <button class="btn ghost" id="clearToken">Clear</button>
+              <button class="btn primary" id="saveToken">Save token</button>
+            </div>
+          </div>
+
+          <div class="settings-section">
             <h3>Change passphrase</h3>
             <div class="section-hint">Stored only on this device</div>
             <div class="two-col">
@@ -1779,9 +1883,6 @@
     }
   });
 
-  if (S.isLoggedIn()) showApp();
-  else showAuth();
-
   S.initThemeToggle('#themeToggle');
 
   document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -1821,6 +1922,7 @@
     renderCategoriesPanel();
     renderCategoryChips();
     renderStorage();
+    renderTokenField();
   }
 
   /* ─── Sidebar stats ───────────────────────────────── */
@@ -2494,6 +2596,126 @@
     );
   });
 
+  /* ─── Comment moderation ──────────────────────────── */
+  const cmodList = document.getElementById('cmodList');
+  const cmodNotice = document.getElementById('commentsNotice');
+  let cmodCache = [];
+
+  function showCmodNotice(text) {
+    cmodNotice.textContent = text;
+    cmodNotice.style.display = 'block';
+    cmodList.innerHTML = '';
+  }
+  function hideCmodNotice() { cmodNotice.style.display = 'none'; }
+
+  async function loadComments() {
+    if (!S.getAdminToken()) {
+      showCmodNotice('No moderation token yet. Add one under Account.');
+      document.getElementById('navCommentCount').textContent = '';
+      return;
+    }
+    hideCmodNotice();
+    cmodList.innerHTML = '<div class="empty">Loading marks…</div>';
+    try {
+      const { comments, count } = await S.api.admin.listComments();
+      cmodCache = comments || [];
+      document.getElementById('navCommentCount').textContent = count || '';
+      renderCmodList();
+    } catch (err) {
+      if (err.status === 401) showCmodNotice('Token rejected. Check that it matches ADMIN_TOKEN in Vercel.');
+      else if (err.status === 503) showCmodNotice('Backend not ready. Enable Vercel KV and set ADMIN_TOKEN in env.');
+      else showCmodNotice('Could not load comments: ' + (err.message || 'unknown'));
+    }
+  }
+
+  function renderCmodList() {
+    if (!cmodCache.length) {
+      cmodList.innerHTML = '<div class="empty">No comments yet.<br>The margins are bright and waiting.</div>';
+      return;
+    }
+    cmodList.innerHTML = cmodCache.map(c => {
+      const date = new Date(c.ts || Date.now());
+      const when = `${date.toLocaleDateString(undefined, {month:'short', day:'2-digit', year:'numeric'})} · ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+      const essayLink = `article.html?id=${encodeURIComponent(c.essayId || '')}`;
+      return `
+        <div class="cmod-row ${c.hidden ? 'is-hidden' : ''}" data-cid="${escapeAttr(c.id)}">
+          <div class="cmod-meta">
+            <strong>${escapeHtml(c.name || 'A reader')}</strong>
+            ${when}<br>
+            <a href="${essayLink}" target="_blank" rel="noopener" style="color: var(--sienna); text-decoration: none;">№ ${escapeHtml(c.essayId || '—')} ↗</a>
+            <span class="pill">${c.hidden ? 'Hidden' : 'Visible'}</span>
+          </div>
+          <div class="cmod-body">${escapeHtml(c.body || '')}</div>
+          <div class="cmod-actions">
+            <button class="btn small" data-toggle="${escapeAttr(c.id)}">${c.hidden ? 'Unhide' : 'Hide'}</button>
+            <button class="btn ghost small" data-delete="${escapeAttr(c.id)}">Delete</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  cmodList.addEventListener('click', async (e) => {
+    const tBtn = e.target.closest('[data-toggle]');
+    const dBtn = e.target.closest('[data-delete]');
+    if (tBtn) {
+      const cid = tBtn.dataset.toggle;
+      const current = cmodCache.find(x => x.id === cid);
+      if (!current) return;
+      tBtn.disabled = true;
+      try {
+        await S.api.admin.toggleHide(cid, !current.hidden);
+        current.hidden = !current.hidden;
+        renderCmodList();
+        toast(current.hidden ? 'comment hidden.' : 'comment visible.');
+      } catch (err) {
+        toast('could not update: ' + (err.message || 'error'));
+      } finally {
+        tBtn.disabled = false;
+      }
+    }
+    if (dBtn) {
+      const cid = dBtn.dataset.delete;
+      confirmModal('Delete this comment?', 'This cannot be undone.', async () => {
+        try {
+          await S.api.admin.deleteComment(cid);
+          cmodCache = cmodCache.filter(x => x.id !== cid);
+          renderCmodList();
+          document.getElementById('navCommentCount').textContent = cmodCache.length || '';
+          toast('comment removed.');
+        } catch (err) {
+          toast('could not delete: ' + (err.message || 'error'));
+        }
+      });
+    }
+  });
+
+  document.getElementById('refreshComments').addEventListener('click', loadComments);
+
+  /* ─── Admin token field ───────────────────────────── */
+  function renderTokenField() {
+    const input = document.getElementById('admin_token');
+    if (!input) return;
+    input.value = S.getAdminToken() || '';
+  }
+  document.getElementById('saveToken').addEventListener('click', () => {
+    const v = document.getElementById('admin_token').value.trim();
+    S.setAdminToken(v);
+    toast(v ? 'token saved.' : 'token cleared.');
+    // If user is on comments panel, auto-load
+    if (document.querySelector('.panel.active[data-panel="comments"]')) loadComments();
+  });
+  document.getElementById('clearToken').addEventListener('click', () => {
+    S.setAdminToken('');
+    document.getElementById('admin_token').value = '';
+    toast('token cleared.');
+  });
+
+  // When user opens the comments panel, auto-load
+  navList.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-panel="comments"]');
+    if (btn) loadComments();
+  });
+
   /* ─── Atmosphere line on sidebar ──────────────────── */
   const adminAtmo = document.getElementById('adminAtmosphere');
   const moods = ['still', 'thinking', 'listening', 'unhurried', 'windowed', 'lit gently'];
@@ -2507,6 +2729,11 @@
   }
   updateAtmosphere();
   setInterval(updateAtmosphere, 15000);
+
+  // Boot the auth flow LAST so every `const` used by renderAll()
+  // has been initialised before showApp() runs it.
+  if (S.isLoggedIn()) showApp();
+  else showAuth();
 
   /* ─── Toast ───────────────────────────────────────── */
   const toastEl = document.getElementById('toast');

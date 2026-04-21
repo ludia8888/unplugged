@@ -1,0 +1,12 @@
+{
+  "name": "unplugged",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A slow journal — essays, with comments and quiet likes stored in Vercel KV.",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@vercel/kv": "^3.0.0"
+  }
+}

@@ -696,7 +696,19 @@
     color: var(--ink-muted);
     display: flex;
     justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
   }
+  .essay .hearts {
+    color: var(--sienna);
+    letter-spacing: .14em;
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+    transition: opacity .8s var(--ease);
+    white-space: nowrap;
+  }
+  .essay .hearts:not(:empty) { opacity: .9; }
+  .essay.layout-cover .hearts { color: var(--gold); }
 
   /* ─ Layout variants ─────────────────────────────────── */
   .essay.layout-standard  { grid-column: span 4; }
@@ -2193,7 +2205,11 @@
     const indexBlock = `<div class="essay-index"><span>№ ${escapeHtml(e.number)}</span><span class="cat">${catHtml}</span></div>`;
     const titleBlock = `<h3 class="essay-title">${e.titleHtml || escapeHtml(e.title)}</h3>`;
     const dekBlock   = e.dek ? `<p class="essay-dek">${e.dek}</p>` : '';
-    const footBlock  = `<div class="essay-foot"><span>${S.formatDateLong(e.date)}</span><span>${escapeHtml(e.readTime || '')}</span></div>`;
+    const footBlock  = `<div class="essay-foot">
+      <span>${S.formatDateLong(e.date)}</span>
+      <span>${escapeHtml(e.readTime || '')}</span>
+      <span class="hearts" data-heart-id="${escapeAttr(e.id)}" aria-hidden="true"></span>
+    </div>`;
 
     const href = `article.html?id=${encodeURIComponent(e.id)}`;
 
@@ -2283,6 +2299,23 @@
       <div class="note-date">${escapeHtml(n.date)}</div>
       <p class="note-body">${n.body}</p>
     </div>`).join('');
+
+  /* ─── Quiet heart counts on cards ─────────────────── */
+  (function fetchHeartCounts() {
+    const ids = Array.from(document.querySelectorAll('.hearts[data-heart-id]'))
+      .map(el => el.dataset.heartId);
+    if (!ids.length || !S.api || !S.api.likes) return;
+    const unique = Array.from(new Set(ids));
+    S.api.likes.get(unique).then(res => {
+      const counts = res.counts || (typeof res.count === 'number' ? { [unique[0]]: res.count } : {});
+      Object.entries(counts).forEach(([id, n]) => {
+        if (!n) return;
+        document.querySelectorAll(`.hearts[data-heart-id="${CSS.escape(id)}"]`).forEach(el => {
+          el.textContent = `♡ ${n}`;
+        });
+      });
+    }).catch(() => { /* silent fail — KV not configured is fine */ });
+  })();
 
   /* ─── Letter submit ───────────────────────────────── */
   document.getElementById('letterForm').addEventListener('submit', (e) => {

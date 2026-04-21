@@ -1015,6 +1015,282 @@
     font-style: italic;
   }
 
+  /* ─── Response section (likes + comments) ──────────── */
+  .article-response {
+    padding: clamp(48px, 8vh, 96px) 0 clamp(32px, 5vh, 56px);
+    border-top: 1px solid var(--hairline);
+    position: relative;
+  }
+  .response-divider {
+    text-align: center;
+    font-size: 22px;
+    color: var(--sienna);
+    opacity: .55;
+    letter-spacing: .6em;
+    margin: 0 0 clamp(40px, 6vh, 64px);
+  }
+
+  .response-like {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: clamp(18px, 2vw, 28px);
+    align-items: center;
+    padding: clamp(22px, 3vh, 32px) 0;
+    border-top: 1px solid var(--hairline-soft);
+    border-bottom: 1px solid var(--hairline-soft);
+    margin-bottom: clamp(48px, 7vh, 80px);
+  }
+  .like-btn {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 14px;
+    background: transparent;
+    border: 1px solid var(--hairline);
+    border-radius: 100px;
+    padding: 12px 22px 12px 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    cursor: none;
+    transition: border-color .4s var(--ease), color .4s var(--ease),
+                background .4s var(--ease), transform .3s var(--ease),
+                letter-spacing .4s var(--ease);
+  }
+  .like-btn:hover {
+    border-color: var(--sienna);
+    color: var(--sienna);
+    letter-spacing: .22em;
+  }
+  .like-btn .like-glyph {
+    display: inline-flex;
+    width: 22px; height: 22px;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1;
+    color: var(--sienna);
+    position: relative;
+    transform-origin: center;
+    transition: transform .4s cubic-bezier(.2,1.4,.3,1);
+  }
+  .like-btn .like-glyph::before { content: '♡'; }
+  .like-btn.is-liked { border-color: var(--sienna); color: var(--sienna); background: color-mix(in oklab, var(--sienna) 6%, transparent); }
+  .like-btn.is-liked .like-glyph::before { content: '♥'; }
+  .like-btn.is-pulsing .like-glyph { transform: scale(1.35); }
+  .like-btn .like-count {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 15px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink);
+  }
+  .like-btn.is-liked .like-count { color: var(--sienna); }
+  .like-meta {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--ink-muted);
+    max-width: 42ch;
+  }
+  .like-meta strong {
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  .comments-head { margin-bottom: clamp(28px, 4vh, 40px); }
+  .comments-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--sienna);
+    margin-bottom: 10px;
+  }
+  .comments-title {
+    font-family: var(--italic);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(34px, 4.4vw, 56px);
+    line-height: 1;
+    letter-spacing: -.02em;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  .comments-lede {
+    font-family: var(--serif);
+    font-variation-settings: 'opsz' 20, 'wght' 380;
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 38ch;
+  }
+
+  .comment-form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-bottom: clamp(44px, 6vh, 72px);
+    background: color-mix(in oklab, var(--paper-warm) 55%, transparent);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 2px;
+    padding: clamp(20px, 3vw, 32px);
+  }
+  .comment-form .cf-name {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: clamp(20px, 2vw, 26px);
+    line-height: 1.3;
+    color: var(--ink);
+    padding: 10px 0;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--hairline);
+    width: 100%;
+    outline: none;
+    margin-bottom: 20px;
+  }
+  .comment-form .cf-name::placeholder { color: var(--ink-faint); }
+  .comment-form .cf-name:focus { border-bottom-color: var(--ink); }
+  .comment-form .cf-body {
+    font-family: var(--serif);
+    font-variation-settings: 'opsz' 18, 'wght' 380, 'SOFT' 60;
+    font-size: clamp(16px, 1.15vw, 18px);
+    line-height: 1.7;
+    color: var(--ink);
+    width: 100%;
+    min-height: 140px;
+    resize: vertical;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--hairline);
+    padding: 10px 0;
+    outline: none;
+  }
+  .comment-form .cf-body::placeholder { color: var(--ink-faint); font-style: italic; }
+  .comment-form .cf-body:focus { border-bottom-color: var(--ink); }
+  .comment-form .cf-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .comment-form .cf-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .2em;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+  }
+  .comment-form .cf-count.is-over { color: var(--sienna); }
+  .comment-form .cf-submit {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--ink);
+    padding: 8px 0;
+    cursor: none;
+    transition: letter-spacing .4s var(--ease), color .3s var(--ease);
+  }
+  .comment-form .cf-submit:hover { letter-spacing: .3em; color: var(--sienna); border-bottom-color: var(--sienna); }
+  .comment-form .cf-submit:disabled { opacity: .35; cursor: default; }
+  .comment-form .cf-message {
+    flex: 0 0 100%;
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--sienna);
+    min-height: 18px;
+    margin-top: 4px;
+  }
+  .comment-form .cf-message.is-success { color: var(--ink); }
+
+  .comment-list { display: flex; flex-direction: column; }
+  .comment {
+    padding: clamp(22px, 3vh, 30px) 0;
+    border-top: 1px solid var(--hairline-soft);
+    animation: comment-fade-in .6s var(--ease-slow) both;
+  }
+  .comment:first-child { border-top: 0; }
+  @keyframes comment-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .comment-meta {
+    display: flex;
+    gap: 16px;
+    align-items: baseline;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .comment-name {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink);
+    letter-spacing: -.005em;
+  }
+  .comment-date {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .comment-body {
+    font-family: var(--serif);
+    font-variation-settings: 'opsz' 16, 'wght' 380;
+    font-size: clamp(16px, 1.1vw, 18px);
+    line-height: 1.7;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-width: 66ch;
+  }
+
+  .comment-empty {
+    padding: 40px 0;
+    text-align: center;
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink-muted);
+    border-top: 1px dashed var(--hairline);
+  }
+  .comment-empty::before {
+    content: '⁂';
+    display: block;
+    color: var(--sienna);
+    letter-spacing: .5em;
+    opacity: .5;
+    margin-bottom: 14px;
+  }
+
+  .response-disabled {
+    padding: 36px 0;
+    text-align: center;
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink-muted);
+    border-top: 1px dashed var(--hairline);
+    border-bottom: 1px dashed var(--hairline);
+  }
+
+  @media (max-width: 700px) {
+    .response-like { grid-template-columns: 1fr; gap: 14px; }
+  }
+
   /* ─── Reveal ─────────────────────────────────────────── */
   .reveal {
     opacity: 0;
@@ -1229,6 +1505,37 @@
         <a href="index.html" data-hover>← return to the journal</a>
       </div>`;
 
+    const response = sectionHtml('article-response shell reveal', `
+      <div class="response-divider">⁂ ⁂ ⁂</div>
+      <div class="response-like">
+        <button class="like-btn" id="likeBtn" data-hover aria-label="Mark this essay" aria-pressed="false">
+          <span class="like-glyph" aria-hidden="true"></span>
+          <span class="like-count" id="likeCount">—</span>
+        </button>
+        <div class="like-meta" id="likeMeta">If something stayed with you, leave a mark.</div>
+      </div>
+
+      <div class="comments-head">
+        <div class="comments-eyebrow">§ Notes in the margin</div>
+        <h3 class="comments-title">Leave a thought</h3>
+        <p class="comments-lede">Slow thinking welcomed. Anything above a breath is plenty.</p>
+      </div>
+
+      <form class="comment-form" id="commentForm" novalidate>
+        <input class="cf-name" type="text" name="name" maxlength="60" placeholder="a name, or none" autocomplete="nickname">
+        <textarea class="cf-body" name="body" maxlength="1000" rows="5" placeholder="a thought, unhurried"></textarea>
+        <div class="cf-actions">
+          <span class="cf-count"><span id="cfCount">0</span> · 1000</span>
+          <button type="submit" class="cf-submit" data-hover>set it down  →</button>
+          <div class="cf-message" id="cfMessage">&nbsp;</div>
+        </div>
+      </form>
+
+      <div class="comment-list" id="commentList">
+        <div class="comment-empty">No marks yet. Yours could be the first.</div>
+      </div>
+    `);
+
     const end = sectionHtml('article-end shell reveal', `
       ${ornament}
       ${navHtml}
@@ -1245,7 +1552,10 @@
         </div>
       </footer>`;
 
-    root.innerHTML = head + hero + body + end + colophon;
+    root.innerHTML = head + hero + body + response + end + colophon;
+
+    // Community (likes + comments)
+    initResponse(e.id);
 
     // Reveal on scroll
     const io = new IntersectionObserver((entries) => {
@@ -1294,6 +1604,169 @@
 
     return `<div class="article-body">${sectionHtmlArr.join('')}</div>`
       + (marginalia ? `<aside class="article-marginalia">${marginalia}</aside>` : '');
+  }
+
+  /* ─── Response: likes + comments ──────────────────── */
+  function initResponse(essayId) {
+    loadLikes(essayId);
+    loadComments(essayId);
+
+    const likeBtn = document.getElementById('likeBtn');
+    if (likeBtn) likeBtn.addEventListener('click', () => toggleLike(essayId));
+
+    const form = document.getElementById('commentForm');
+    if (form) {
+      form.addEventListener('submit', (ev) => submitComment(ev, essayId));
+      const bodyField = form.querySelector('.cf-body');
+      const counter = document.getElementById('cfCount');
+      bodyField.addEventListener('input', () => {
+        const n = bodyField.value.length;
+        counter.textContent = n;
+        counter.parentElement.classList.toggle('is-over', n > 900);
+      });
+    }
+  }
+
+  async function loadLikes(essayId) {
+    try {
+      const { count, liked } = await S.api.likes.get(essayId);
+      applyLike(count || 0, !!liked);
+    } catch (err) {
+      if (err && (err.status === 503 || err.status === 404)) {
+        disableResponse('A quiet place for notes will open here once the room is wired up.');
+      }
+    }
+  }
+
+  function applyLike(count, liked) {
+    const btn = document.getElementById('likeBtn');
+    if (!btn) return;
+    btn.classList.toggle('is-liked', liked);
+    btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+    btn.querySelector('.like-count').textContent = String(count);
+    const meta = document.getElementById('likeMeta');
+    if (!meta) return;
+    if (count === 0)      meta.innerHTML = 'If something stayed with you, leave a mark.';
+    else if (count === 1) meta.innerHTML = '<strong>One reader</strong> was moved.';
+    else                  meta.innerHTML = `<strong>${count} readers</strong> were moved.`;
+  }
+
+  async function toggleLike(essayId) {
+    const btn = document.getElementById('likeBtn');
+    btn.classList.add('is-pulsing');
+    setTimeout(() => btn.classList.remove('is-pulsing'), 420);
+    try {
+      const { count, liked } = await S.api.likes.toggle(essayId);
+      applyLike(count || 0, !!liked);
+    } catch (err) {
+      if (err && err.status === 429) {
+        flashMessage('A moment — marks arrive slowly.');
+      } else {
+        console.warn('[like]', err);
+      }
+    }
+  }
+
+  async function loadComments(essayId) {
+    try {
+      const { comments } = await S.api.comments.list(essayId);
+      renderCommentList(comments || []);
+    } catch (err) {
+      if (err && (err.status === 503 || err.status === 404)) {
+        disableResponse('A quiet place for notes will open here once the room is wired up.');
+      }
+    }
+  }
+
+  function renderCommentList(comments) {
+    const list = document.getElementById('commentList');
+    if (!list) return;
+    if (!comments.length) {
+      list.innerHTML = '<div class="comment-empty">No marks yet. Yours could be the first.</div>';
+      return;
+    }
+    list.innerHTML = comments.map(c => renderCommentNode(c)).join('');
+  }
+
+  function renderCommentNode(c, opts) {
+    const justNow = opts && opts.justNow;
+    return `
+      <div class="comment">
+        <div class="comment-meta">
+          <span class="comment-name">${escapeHtml(c.name || 'A reader')}</span>
+          <span class="comment-date">${justNow ? 'just now' : formatRelative(c.ts)}</span>
+        </div>
+        <p class="comment-body">${escapeHtml(c.body || '')}</p>
+      </div>`;
+  }
+
+  async function submitComment(ev, essayId) {
+    ev.preventDefault();
+    const form = ev.currentTarget;
+    const name = form.elements.name.value.trim();
+    const body = form.elements.body.value.trim();
+    const msg = document.getElementById('cfMessage');
+    const submitBtn = form.querySelector('.cf-submit');
+    msg.textContent = '';
+    msg.classList.remove('is-success');
+
+    if (!body) { msg.textContent = 'Something, even briefly.'; return; }
+    if (body.length > 1000) { msg.textContent = 'Keep it under 1000 characters.'; return; }
+
+    submitBtn.disabled = true;
+    try {
+      const { comment } = await S.api.comments.post(essayId, { name, body });
+      const list = document.getElementById('commentList');
+      if (list.querySelector('.comment-empty')) list.innerHTML = '';
+      const temp = document.createElement('div');
+      temp.innerHTML = renderCommentNode(comment, { justNow: true });
+      list.prepend(temp.firstElementChild);
+      form.reset();
+      document.getElementById('cfCount').textContent = '0';
+      msg.textContent = 'Set down. Thank you.';
+      msg.classList.add('is-success');
+      setTimeout(() => {
+        if (msg.classList.contains('is-success')) {
+          msg.textContent = '';
+          msg.classList.remove('is-success');
+        }
+      }, 4200);
+    } catch (err) {
+      const fallback = (err && err.data && err.data.error) || 'Could not send — please try again.';
+      msg.textContent = fallback;
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  function flashMessage(text) {
+    const msg = document.getElementById('cfMessage');
+    if (!msg) return;
+    msg.textContent = text;
+    setTimeout(() => { if (msg.textContent === text) msg.textContent = ''; }, 3000);
+  }
+
+  function disableResponse(text) {
+    const section = document.querySelector('.article-response');
+    if (!section) return;
+    section.innerHTML = `
+      <div class="response-divider">⁂</div>
+      <div class="response-disabled">${escapeHtml(text)}</div>
+    `;
+  }
+
+  function formatRelative(ts) {
+    if (!ts) return '';
+    const now = Date.now();
+    const diff = Math.max(0, now - ts);
+    const min = 60 * 1000, hour = 60 * min, day = 24 * hour, week = 7 * day;
+    if (diff < min)  return 'just now';
+    if (diff < hour) return `${Math.floor(diff / min)} min ago`;
+    if (diff < day)  return `${Math.floor(diff / hour)} hr ago`;
+    if (diff < week) return `${Math.floor(diff / day)} d ago`;
+    const d = new Date(ts);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
   }
 
   function renderNotFound(reason) {
