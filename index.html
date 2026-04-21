@@ -1177,6 +1177,62 @@
     50%      { opacity: .6; }
   }
 
+  /* The whole masthead title breathes softly, like a sustained piano note */
+  @keyframes masthead-breath {
+    0%, 100% { opacity: 1;   letter-spacing: -.035em; }
+    50%      { opacity: .94; letter-spacing: -.0335em; }
+  }
+  .masthead-title.is-breathing { animation: masthead-breath 12s ease-in-out infinite; }
+
+  /* Listener note ripple — a piano pedal spreading into the room */
+  .listener-note { position: relative; }
+  .listener-note::before,
+  .listener-note::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid var(--sienna);
+    pointer-events: none;
+    opacity: 0;
+    animation: note-ripple 3.6s cubic-bezier(.2,.6,.2,1) infinite;
+  }
+  .listener-note::after { animation-delay: 1.8s; }
+  @keyframes note-ripple {
+    0%   { opacity: .55; transform: scale(1); }
+    80%  { opacity: 0;   transform: scale(2.4); }
+    100% { opacity: 0;   transform: scale(2.4); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .masthead-title.is-breathing { animation: none; }
+    .listener-note::before,
+    .listener-note::after { display: none; }
+  }
+
+  /* Featured asterism — closing the thought before "Continue reading" */
+  .featured-asterism {
+    margin: clamp(28px, 4vh, 40px) 0 clamp(20px, 3vh, 28px);
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--sienna);
+    opacity: .55;
+    letter-spacing: .8em;
+    font-variation-settings: 'wght' 300;
+  }
+
+  /* Keyboard focus — a small ink stain, not a blue browser ring */
+  :focus-visible {
+    outline: 1px dashed var(--sienna);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible { outline-offset: 3px; }
+  .theme-toggle:focus-visible,
+  .book-toggle:focus-visible { outline-offset: 5px; }
+
   /* ─── Spotify listening room ─────────────────────────── */
   .listener {
     position: fixed;
@@ -2042,6 +2098,7 @@
     const titleHtml = `<h3 class="featured-title">${featured.titleHtml || escapeHtml(featured.title)}</h3>`;
     const dekHtml   = featured.dek  ? `<p class="featured-dek">${featured.dek}</p>`   : '';
     const bodyHtml  = featured.body ? `<p class="featured-body">${featured.body}</p>` : '';
+    const asterismHtml = featured.body ? `<div class="featured-asterism">⁂</div>` : '';
     const ctaHtml   = `<a class="featured-cta" data-hover href="article.html?id=${encodeURIComponent(featured.id)}"> Continue reading <span class="arrow">→</span> </a>`;
     const metaRows  = `
         <dl class="featured-meta">
@@ -2063,7 +2120,7 @@
         ${captionHtml}
         <div class="featured-body-row">
           <article class="featured-left">
-            ${tagHtml}${titleHtml}${dekHtml}${bodyHtml}${ctaHtml}
+            ${tagHtml}${titleHtml}${dekHtml}${bodyHtml}${asterismHtml}${ctaHtml}
           </article>
           <aside class="featured-right">
             ${metaRows}${marginHtml}
@@ -2076,14 +2133,14 @@
           ${captionHtml}
         </div>
         <article class="featured-left">
-          ${tagHtml}${titleHtml}${dekHtml}${bodyHtml}${ctaHtml}
+          ${tagHtml}${titleHtml}${dekHtml}${bodyHtml}${asterismHtml}${ctaHtml}
           <div class="featured-split-meta">${metaRows}</div>
           ${marginHtml}
         </article>`;
     } else {
       featuredGrid.innerHTML = `
         <article class="featured-left">
-          ${tagHtml}${titleHtml}${dekHtml}${bodyHtml}${ctaHtml}
+          ${tagHtml}${titleHtml}${dekHtml}${bodyHtml}${asterismHtml}${ctaHtml}
         </article>
         <aside class="featured-right">
           ${metaRows}${marginHtml}
@@ -2459,6 +2516,12 @@
 
   /* ─── Reveal body ─────────────────────────────────── */
   requestAnimationFrame(() => document.body.classList.remove('is-loading'));
+
+  // After the masthead finishes rising (~2s), let it start breathing
+  setTimeout(() => {
+    const mh = document.querySelector('.masthead-title');
+    if (mh) mh.classList.add('is-breathing');
+  }, 2100);
 })();
 </script>
 

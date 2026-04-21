@@ -1210,6 +1210,19 @@
   }
 
   ::selection { background: var(--sienna); color: var(--paper); }
+
+  :focus-visible {
+    outline: 1px dashed var(--sienna);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible { outline-offset: 3px; }
+  .theme-toggle:focus-visible { outline-offset: 5px; }
+  .switch:focus-visible { outline-offset: 4px; }
 </style>
 </head>
 <body>
@@ -1832,7 +1845,7 @@
   function renderEssayList() {
     const all = S.getEssays();
     if (!all.length) {
-      essayList.innerHTML = `<div class="empty">No essays yet. Begin with the first breath.</div>`;
+      essayList.innerHTML = `<div class="empty">The desk is quiet.<br>A first breath would change everything.</div>`;
       return;
     }
     essayList.innerHTML = all.map(e => {
@@ -2215,7 +2228,7 @@
   function renderCategoriesPanel() {
     const cats = S.getCategories();
     if (!cats.length) {
-      catList.innerHTML = `<div class="empty">No categories yet. Add your first above.</div>`;
+      catList.innerHTML = `<div class="empty">No sections yet.<br>Every shelf is empty; every shelf is waiting.</div>`;
       return;
     }
     catList.innerHTML = cats.map(c => {
@@ -2365,7 +2378,7 @@
   function renderNotesPanel() {
     const notes = S.getSettings().notes || [];
     if (!notes.length) {
-      notesEditor.innerHTML = `<div class="empty">No notes yet.</div>`;
+      notesEditor.innerHTML = `<div class="empty">The margins are bright and waiting.<br>A fragment, an aphorism, a found line.</div>`;
       return;
     }
     notesEditor.innerHTML = notes.map((n, i) => `

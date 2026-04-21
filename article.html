@@ -771,7 +771,41 @@
     font-size: 13px;
     line-height: 1;
     padding-bottom: 2px;
+    position: relative;
   }
+  .listener-note::before,
+  .listener-note::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid var(--sienna);
+    pointer-events: none;
+    opacity: 0;
+    animation: note-ripple 3.6s cubic-bezier(.2,.6,.2,1) infinite;
+  }
+  .listener-note::after { animation-delay: 1.8s; }
+  @keyframes note-ripple {
+    0%   { opacity: .55; transform: scale(1); }
+    80%  { opacity: 0;   transform: scale(2.4); }
+    100% { opacity: 0;   transform: scale(2.4); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .listener-note::before,
+    .listener-note::after { display: none; }
+  }
+
+  :focus-visible {
+    outline: 1px dashed var(--sienna);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible { outline-offset: 3px; }
+  .theme-toggle:focus-visible,
+  .book-toggle:focus-visible { outline-offset: 5px; }
   .listener-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 38vw; }
   .listener-label em { font-family: var(--italic); font-style: italic; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--ink-soft); margin-left: 6px; }
   .listener-panel {
