@@ -1913,7 +1913,7 @@
     const titleHtml = `<h3 class="featured-title">${featured.titleHtml || escapeHtml(featured.title)}</h3>`;
     const dekHtml   = featured.dek  ? `<p class="featured-dek">${featured.dek}</p>`   : '';
     const bodyHtml  = featured.body ? `<p class="featured-body">${featured.body}</p>` : '';
-    const ctaHtml   = `<a class="featured-cta" data-hover href="#"> Continue reading <span class="arrow">→</span> </a>`;
+    const ctaHtml   = `<a class="featured-cta" data-hover href="article.html?id=${encodeURIComponent(featured.id)}"> Continue reading <span class="arrow">→</span> </a>`;
     const metaRows  = `
         <dl class="featured-meta">
           <div class="row"><dt>Written by</dt><dd>${escapeHtml(featured.author || '')}</dd></div>
@@ -1986,12 +1986,14 @@
     const dekBlock   = e.dek ? `<p class="essay-dek">${e.dek}</p>` : '';
     const footBlock  = `<div class="essay-foot"><span>${S.formatDateLong(e.date)}</span><span>${escapeHtml(e.readTime || '')}</span></div>`;
 
+    const href = `article.html?id=${encodeURIComponent(e.id)}`;
+
     if (layout === 'cover') {
       const bg = hasImage
         ? `<div class="cover-image" style="background-image: url('${escapeCss(e.image)}')"></div>` : '';
       const hasClass = hasImage ? ' has-image' : '';
       return `
-        <a class="essay layout-cover${hasClass}" data-hover href="#">
+        <a class="essay layout-cover${hasClass}" data-hover href="${href}">
           ${bg}
           <div class="cover-text">
             ${indexBlock}
@@ -2005,7 +2007,7 @@
 
     if (layout === 'portrait') {
       return `
-        <a class="essay layout-portrait" data-hover href="#">
+        <a class="essay layout-portrait" data-hover href="${href}">
           <div class="essay-image"><img src="${escapeAttr(e.image)}" alt="${escapeAttr(e.imageAlt || e.title || '')}"></div>
           ${indexBlock}${titleBlock}${dekBlock}${footBlock}
         </a>`;
@@ -2013,7 +2015,7 @@
 
     if (layout === 'landscape') {
       return `
-        <a class="essay layout-landscape" data-hover href="#">
+        <a class="essay layout-landscape" data-hover href="${href}">
           <div class="essay-image"><img src="${escapeAttr(e.image)}" alt="${escapeAttr(e.imageAlt || e.title || '')}"></div>
           <div class="essay-body-col">
             ${indexBlock}${titleBlock}${dekBlock}${footBlock}
@@ -2022,7 +2024,7 @@
     }
 
     return `
-      <a class="essay layout-${escapeAttr(layout)}" data-hover href="#">
+      <a class="essay layout-${escapeAttr(layout)}" data-hover href="${href}">
         ${indexBlock}${titleBlock}${dekBlock}${footBlock}
       </a>`;
   }
@@ -2058,7 +2060,7 @@
     `Showing ${archiveShown.length} of ${archiveAll.length}`;
 
   document.getElementById('archiveTable').innerHTML = archiveShown.map(e => `
-    <a class="archive-row" data-hover href="#">
+    <a class="archive-row" data-hover href="article.html?id=${encodeURIComponent(e.id)}">
       <span class="a-date">${S.formatDate(e.date)}</span>
       <span class="a-cat">${renderCategoryInline(e.category)}</span>
       <span class="a-title">${e.titleHtml || escapeHtml(e.title)}</span>
