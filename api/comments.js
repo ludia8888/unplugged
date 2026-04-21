@@ -63,7 +63,7 @@ export default async function handler(req, res) {
         .filter(r => r && r.hidden !== '1')
         .map(r => ({
           id: r.id,
-          name: r.name || 'A reader',
+          name: r.name || '',          // empty = anonymous; client resolves variant
           body: r.body || '',
           ts: Number(r.ts) || 0,
         }));
@@ -86,7 +86,10 @@ export default async function handler(req, res) {
       if (rawBody.length < MIN_BODY) return res.status(400).json({ error: 'empty mark' });
       if (rawBody.length > MAX_BODY) return res.status(400).json({ error: `keep it under ${MAX_BODY} characters` });
 
-      const name = sanitize(rawName).slice(0, MAX_NAME) || 'A reader';
+      // Empty name stays empty — the article page picks a quiet variant
+      // deterministically from the comment id. Admin moderation shows the
+      // raw empty so the moderator can tell an anonymous mark from a signed one.
+      const name = sanitize(rawName).slice(0, MAX_NAME);
       const clean = sanitize(rawBody).slice(0, MAX_BODY);
       const cid = crypto.randomUUID();
       const ts  = Date.now();

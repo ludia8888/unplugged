@@ -1017,17 +1017,31 @@
 
   /* ─── Response section (likes + comments) ──────────── */
   .article-response {
-    padding: clamp(48px, 8vh, 96px) 0 clamp(32px, 5vh, 56px);
+    padding: clamp(28px, 4vh, 48px) 0 clamp(32px, 5vh, 56px);
     border-top: 1px solid var(--hairline);
     position: relative;
   }
+  /* Single asterism, centered, with an inline hairline on either side —
+     reads as a pressed colophon glyph rather than a banner. */
   .response-divider {
-    text-align: center;
-    font-size: 22px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+    max-width: 320px;
+    margin: 0 auto clamp(24px, 4vh, 40px);
+    font-family: var(--serif);
+    font-variation-settings: 'wght' 300;
+    font-size: 18px;
     color: var(--sienna);
-    opacity: .55;
-    letter-spacing: .6em;
-    margin: 0 0 clamp(40px, 6vh, 64px);
+    opacity: .7;
+    letter-spacing: 0;
+  }
+  .response-divider::before,
+  .response-divider::after {
+    content: '';
+    height: 1px;
+    background: var(--hairline);
   }
 
   .response-like {
@@ -1065,21 +1079,27 @@
   }
   .like-btn .like-glyph {
     display: inline-flex;
-    width: 22px; height: 22px;
+    width: 16px; height: 16px;
     align-items: center;
     justify-content: center;
     font-family: var(--serif);
+    font-variation-settings: 'wght' 300;
     font-size: 18px;
     line-height: 1;
     color: var(--sienna);
     position: relative;
     transform-origin: center;
-    transition: transform .4s cubic-bezier(.2,1.4,.3,1);
+    transition: transform .5s cubic-bezier(.2,1.4,.3,1);
   }
-  .like-btn .like-glyph::before { content: '♡'; }
+  /* A pressed-ink mark: hollow ring → filled dot.
+     Matches the atmosphere pulse and the ink-drop cursor. */
+  .like-btn .like-glyph::before { content: '○'; }
   .like-btn.is-liked { border-color: var(--sienna); color: var(--sienna); background: color-mix(in oklab, var(--sienna) 6%, transparent); }
-  .like-btn.is-liked .like-glyph::before { content: '♥'; }
-  .like-btn.is-pulsing .like-glyph { transform: scale(1.35); }
+  .like-btn.is-liked .like-glyph::before { content: '●'; }
+  .like-btn.is-pulsing .like-glyph { transform: scale(1.4); }
+  .like-btn.is-liked .like-glyph {
+    text-shadow: 0 0 12px color-mix(in oklab, var(--sienna) 60%, transparent);
+  }
   .like-btn .like-count {
     font-family: var(--italic);
     font-style: italic;
@@ -1130,29 +1150,31 @@
     max-width: 38ch;
   }
 
+  /* The form is part of the page flow, not a card on top of it.
+     Only baseline underlines remain — as if the reader is writing
+     directly into the margin of the journal. */
   .comment-form {
     display: grid;
     grid-template-columns: 1fr;
     gap: 0;
     margin-bottom: clamp(44px, 6vh, 72px);
-    background: color-mix(in oklab, var(--paper-warm) 55%, transparent);
-    border: 1px solid var(--hairline-soft);
-    border-radius: 2px;
-    padding: clamp(20px, 3vw, 32px);
+    padding: 0;
+    max-width: 66ch;
   }
   .comment-form .cf-name {
     font-family: var(--italic);
     font-style: italic;
-    font-size: clamp(20px, 2vw, 26px);
+    font-size: clamp(24px, 2.4vw, 30px);
     line-height: 1.3;
     color: var(--ink);
-    padding: 10px 0;
+    padding: 8px 0 10px;
     background: transparent;
     border: 0;
     border-bottom: 1px solid var(--hairline);
     width: 100%;
     outline: none;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    transition: border-bottom-color .4s var(--ease);
   }
   .comment-form .cf-name::placeholder { color: var(--ink-faint); }
   .comment-form .cf-name:focus { border-bottom-color: var(--ink); }
@@ -1240,6 +1262,8 @@
     color: var(--ink);
     letter-spacing: -.005em;
   }
+  /* Anonymous readers sit one shade back so signed names can catch the eye. */
+  .comment.is-anonymous .comment-name { color: var(--ink-muted); }
   .comment-date {
     font-family: var(--mono);
     font-size: 10px;
@@ -1506,13 +1530,13 @@
       </div>`;
 
     const response = sectionHtml('article-response shell reveal', `
-      <div class="response-divider">⁂ ⁂ ⁂</div>
+      <div class="response-divider">⁂</div>
       <div class="response-like">
         <button class="like-btn" id="likeBtn" data-hover aria-label="Mark this essay" aria-pressed="false">
           <span class="like-glyph" aria-hidden="true"></span>
           <span class="like-count" id="likeCount">—</span>
         </button>
-        <div class="like-meta" id="likeMeta">If something stayed with you, leave a mark.</div>
+        <div class="like-meta" id="likeMeta">If something stays with you, press this.</div>
       </div>
 
       <div class="comments-head">
@@ -1646,9 +1670,9 @@
     btn.querySelector('.like-count').textContent = String(count);
     const meta = document.getElementById('likeMeta');
     if (!meta) return;
-    if (count === 0)      meta.innerHTML = 'If something stayed with you, leave a mark.';
-    else if (count === 1) meta.innerHTML = '<strong>One reader</strong> was moved.';
-    else                  meta.innerHTML = `<strong>${count} readers</strong> were moved.`;
+    if (count === 0)      meta.innerHTML = 'If something stays with you, press this.';
+    else if (count === 1) meta.innerHTML = 'This stayed with <strong>one reader</strong>.';
+    else                  meta.innerHTML = `This stayed with <strong>${count} readers</strong>.`;
   }
 
   async function toggleLike(essayId) {
@@ -1688,12 +1712,34 @@
     list.innerHTML = comments.map(c => renderCommentNode(c)).join('');
   }
 
+  // Quiet anonymous variants. Picked deterministically from the comment id
+  // so the same anonymous commenter reads the same way every load.
+  const ANON_VARIANTS = [
+    'a reader',
+    'a quiet reader',
+    'a passerby',
+    'one more',
+    'an unsigned hand',
+    'a late visitor',
+    'a stranger, kind',
+  ];
+  function resolveName(name, id) {
+    const clean = (name || '').trim();
+    if (clean) return clean;
+    let h = 0;
+    const src = String(id || '');
+    for (let i = 0; i < src.length; i++) h = ((h * 31) + src.charCodeAt(i)) >>> 0;
+    return ANON_VARIANTS[h % ANON_VARIANTS.length];
+  }
+
   function renderCommentNode(c, opts) {
     const justNow = opts && opts.justNow;
+    const displayName = resolveName(c.name, c.id);
+    const isAnon = !((c.name || '').trim());
     return `
-      <div class="comment">
+      <div class="comment${isAnon ? ' is-anonymous' : ''}">
         <div class="comment-meta">
-          <span class="comment-name">${escapeHtml(c.name || 'A reader')}</span>
+          <span class="comment-name">${escapeHtml(displayName)}</span>
           <span class="comment-date">${justNow ? 'just now' : formatRelative(c.ts)}</span>
         </div>
         <p class="comment-body">${escapeHtml(c.body || '')}</p>
