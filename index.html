@@ -336,9 +336,6 @@
   }
 
   .masthead-sub {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: clamp(24px, 4vw, 48px);
     margin-top: clamp(36px, 6vh, 56px);
     padding-top: 28px;
     border-top: 1px solid var(--hairline-soft);
@@ -346,30 +343,10 @@
   .masthead-sub .english {
     font-family: var(--serif);
     font-variation-settings: 'opsz' 36, 'wght' 360, 'SOFT' 100;
-    font-size: clamp(17px, 1.6vw, 22px);
+    font-size: clamp(18px, 1.7vw, 24px);
     line-height: 1.45;
-    max-width: 36ch;
+    max-width: 52ch;
     color: var(--ink-soft);
-  }
-  .masthead-sub .korean {
-    font-family: var(--italic);
-    font-style: italic;
-    font-size: clamp(17px, 1.6vw, 22px);
-    line-height: 1.5;
-    color: var(--ink-muted);
-    text-align: right;
-    align-self: end;
-  }
-  .masthead-sub .korean .k-title {
-    display: block;
-    font-family: var(--serif);
-    font-style: normal;
-    font-variation-settings: 'wght' 500;
-    font-size: 13px;
-    letter-spacing: .18em;
-    text-transform: uppercase;
-    color: var(--ink);
-    margin-bottom: 6px;
   }
 
   /* ─── Epigraph ───────────────────────────────────────── */
@@ -1512,8 +1489,6 @@
     .masthead-meta { grid-template-columns: 1fr; gap: 4px; padding-bottom: 32px; }
     .masthead-meta .right, .masthead-meta .center { text-align: left; }
 
-    .masthead-sub { grid-template-columns: 1fr; gap: 24px; }
-    .masthead-sub .korean { text-align: left; }
 
     .section-head { grid-template-columns: 1fr; }
     .section-head > div:last-child { display: none; }
@@ -2047,10 +2022,6 @@
 
   <div class="masthead-sub">
     <p class="english" id="mastEnglish"></p>
-    <p class="korean">
-      <span class="k-title" id="mastKoreanTitle"></span>
-      <em id="mastKorean"></em>
-    </p>
   </div>
 </section>
 
@@ -2240,8 +2211,6 @@
   document.getElementById('mastSeason').textContent  = settings.masthead.season;
   document.getElementById('mastArchive').textContent = settings.masthead.archiveNote;
   document.getElementById('mastEnglish').innerHTML   = settings.masthead.english;
-  document.getElementById('mastKoreanTitle').innerHTML = settings.masthead.koreanTitle;
-  document.getElementById('mastKorean').innerHTML    = settings.masthead.korean;
 
   /* ─── Epigraph ────────────────────────────────────── */
   document.getElementById('epigraphLines').innerHTML =

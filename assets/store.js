@@ -23,9 +23,7 @@
       season: 'Spring Issue  ·  April, 2026',
       archiveNote: 'An ongoing archive',
       english:
-        "Essays on <em>humanities</em>, the art of <em>building</em>, the rooms technology leaves behind, and the long history of what we have already loved. Written slowly. Read with time.",
-      korean: '기술과 인간 사이, <br>이미 지나가버린 것에 대한 사랑.',
-      koreanTitle: '플러그를 뽑는 시간'
+        "Essays on <em>humanities</em>, the art of <em>building</em>, the rooms technology leaves behind, and the long history of what we have already loved. Written slowly. Read with time."
     },
     atmosphereCity: 'seoul',
     atmosphereTemp: '6°c',
@@ -56,7 +54,7 @@
       { date: '11 April, dawn',
         body: 'Every startup I admire has a ghost in it: some earlier form, some refused opportunity, some doorway the founder had to close. You can hear it in the way they write product notes.' },
       { date: '03 April, 07:10',
-        body: 'In 이중섭\'s letters from Jeju, the children are always drawn from above, as if seen by someone already leaving. He loved them, and he knew.' }
+        body: "In Lee Jung-seop's letters from Jeju, the children are always drawn from above, as if seen by someone already leaving. He loved them, and he knew." }
     ],
     categories: [
       { id: 'on-beauty',         name: 'On Beauty',         color: '#a4401a' },
@@ -235,7 +233,7 @@
     return String(name || '')
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9가-힣\s-]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .slice(0, 40)
       || ('cat-' + Date.now());

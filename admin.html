@@ -1670,17 +1670,6 @@
 
             <div class="two-col" style="margin-top: 18px;">
               <div class="field">
-                <label for="m_ktitle">Korean eyebrow</label>
-                <input type="text" id="m_ktitle" placeholder="플러그를 뽑는 시간">
-              </div>
-              <div class="field">
-                <label for="m_korean">Korean subtitle</label>
-                <input type="text" id="m_korean" placeholder="기술과 인간 사이, <br>이미 지나가버린 것에 대한 사랑.">
-              </div>
-            </div>
-
-            <div class="two-col" style="margin-top: 18px;">
-              <div class="field">
                 <label for="m_city">Atmosphere city</label>
                 <input type="text" id="m_city" placeholder="seoul">
               </div>
@@ -2442,8 +2431,6 @@
     document.getElementById('m_issue').value    = st.masthead.issue;
     document.getElementById('m_season').value   = st.masthead.season;
     document.getElementById('m_english').value  = st.masthead.english;
-    document.getElementById('m_ktitle').value   = st.masthead.koreanTitle;
-    document.getElementById('m_korean').value   = st.masthead.korean;
     document.getElementById('m_city').value     = st.atmosphereCity;
     document.getElementById('m_temp').value     = st.atmosphereTemp;
     document.getElementById('m_epLines').value  = (st.epigraph.lines || []).join('\n');
@@ -2458,8 +2445,6 @@
         season: document.getElementById('m_season').value,
         archiveNote: S.getSettings().masthead.archiveNote,
         english: document.getElementById('m_english').value,
-        koreanTitle: document.getElementById('m_ktitle').value,
-        korean: document.getElementById('m_korean').value
       },
       atmosphereCity: document.getElementById('m_city').value,
       atmosphereTemp: document.getElementById('m_temp').value,
