@@ -1068,10 +1068,13 @@
     text-transform: uppercase;
     color: var(--ink-muted);
     cursor: none;
+    position: relative;
+    overflow: visible;
     transition: border-color .4s var(--ease), color .4s var(--ease),
-                background .4s var(--ease), transform .3s var(--ease),
+                background .4s var(--ease), transform .18s var(--ease),
                 letter-spacing .4s var(--ease);
   }
+  .like-btn:active { transform: translateY(1px); }
   .like-btn:hover {
     border-color: var(--sienna);
     color: var(--sienna);
@@ -1089,17 +1092,82 @@
     color: var(--sienna);
     position: relative;
     transform-origin: center;
-    transition: transform .5s cubic-bezier(.2,1.4,.3,1);
   }
   /* A pressed-ink mark: hollow ring → filled dot.
      Matches the atmosphere pulse and the ink-drop cursor. */
-  .like-btn .like-glyph::before { content: '○'; }
+  .like-btn .like-glyph::before {
+    content: '○';
+    display: inline-block;
+    transform-origin: center;
+  }
   .like-btn.is-liked { border-color: var(--sienna); color: var(--sienna); background: color-mix(in oklab, var(--sienna) 6%, transparent); }
   .like-btn.is-liked .like-glyph::before { content: '●'; }
-  .like-btn.is-pulsing .like-glyph { transform: scale(1.4); }
   .like-btn.is-liked .like-glyph {
     text-shadow: 0 0 12px color-mix(in oklab, var(--sienna) 60%, transparent);
   }
+
+  /* Press animation: a quick spring on the glyph wrapper.
+     Separate from breath (which runs on ::before) so the two coexist. */
+  @keyframes like-press {
+    0%   { transform: scale(1); }
+    25%  { transform: scale(0.88); }
+    55%  { transform: scale(1.32); }
+    100% { transform: scale(1); }
+  }
+  .like-btn.is-pulsing .like-glyph {
+    animation: like-press .56s cubic-bezier(.2,1.4,.3,1);
+  }
+
+  /* Held breath: once pressed, the filled dot slowly in/exhales.
+     Applied to ::before so the press spring on .like-glyph doesn't collide. */
+  @keyframes like-breath {
+    0%, 100% { opacity: 1;    transform: scale(1); }
+    50%      { opacity: .85;  transform: scale(.94); }
+  }
+  .like-btn.is-liked .like-glyph::before {
+    animation: like-breath 6.5s ease-in-out infinite 0.8s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .like-btn.is-liked .like-glyph::before,
+    .like-btn.is-pulsing .like-glyph { animation: none; }
+  }
+
+  /* Ink-drop ripple — spawned on press, expands outward, fades. */
+  .like-btn .ripple {
+    position: absolute;
+    top: 50%;
+    left: 30px;  /* sits over the glyph, which is ~20px + padding 20px ≈ 30 */
+    width: 22px; height: 22px;
+    margin: -11px 0 0 -11px;
+    border-radius: 50%;
+    background: var(--sienna);
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0);
+  }
+  .like-btn.is-pulsing .ripple {
+    animation: like-ripple .72s cubic-bezier(.2,.6,.2,1);
+  }
+  @keyframes like-ripple {
+    0%   { transform: scale(0.3); opacity: .45; }
+    70%  { opacity: 0; }
+    100% { transform: scale(3.8); opacity: 0; }
+  }
+
+  /* Count bump on change */
+  .like-count {
+    display: inline-block;
+    transition: color .3s;
+  }
+  .like-count.is-changing {
+    animation: count-bump .55s cubic-bezier(.2,1.4,.3,1);
+  }
+  @keyframes count-bump {
+    0%   { transform: translateY(0);    color: var(--ink); }
+    40%  { transform: translateY(-3px); color: var(--sienna); }
+    100% { transform: translateY(0);    color: var(--ink); }
+  }
+  .like-btn.is-liked .like-count { color: var(--sienna); }
   .like-btn .like-count {
     font-family: var(--italic);
     font-style: italic;
@@ -1533,6 +1601,7 @@
       <div class="response-divider">⁂</div>
       <div class="response-like">
         <button class="like-btn" id="likeBtn" data-hover aria-label="Mark this essay" aria-pressed="false">
+          <span class="ripple" aria-hidden="true"></span>
           <span class="like-glyph" aria-hidden="true"></span>
           <span class="like-count" id="likeCount">—</span>
         </button>
@@ -1662,12 +1731,26 @@
     }
   }
 
-  function applyLike(count, liked) {
+  function applyLike(count, liked, opts) {
+    const animated = !!(opts && opts.animate);
     const btn = document.getElementById('likeBtn');
     if (!btn) return;
     btn.classList.toggle('is-liked', liked);
     btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
-    btn.querySelector('.like-count').textContent = String(count);
+
+    const countEl = btn.querySelector('.like-count');
+    const prev = countEl.textContent;
+    const next = String(count);
+    if (prev !== next) {
+      countEl.textContent = next;
+      if (animated) {
+        countEl.classList.remove('is-changing');
+        void countEl.offsetWidth;
+        countEl.classList.add('is-changing');
+        setTimeout(() => countEl.classList.remove('is-changing'), 600);
+      }
+    }
+
     const meta = document.getElementById('likeMeta');
     if (!meta) return;
     if (count === 0)      meta.innerHTML = 'If something stays with you, press this.';
@@ -1677,11 +1760,16 @@
 
   async function toggleLike(essayId) {
     const btn = document.getElementById('likeBtn');
+
+    // Re-trigger press animation even on repeat clicks.
+    btn.classList.remove('is-pulsing');
+    void btn.offsetWidth;
     btn.classList.add('is-pulsing');
-    setTimeout(() => btn.classList.remove('is-pulsing'), 420);
+    setTimeout(() => btn.classList.remove('is-pulsing'), 720);
+
     try {
       const { count, liked } = await S.api.likes.toggle(essayId);
-      applyLike(count || 0, !!liked);
+      applyLike(count || 0, !!liked, { animate: true });
     } catch (err) {
       if (err && err.status === 429) {
         flashMessage('A moment — marks arrive slowly.');
