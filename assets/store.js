@@ -161,9 +161,17 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return clone(DEFAULT_DATA);
       const parsed = JSON.parse(raw);
+      const settings = Object.assign({}, DEFAULT_SETTINGS, parsed.settings || {});
+      // Defensive nested fallbacks so partial saves never leave required
+      // subfields (like `epigraph.lines`) undefined.
+      settings.masthead  = Object.assign({}, DEFAULT_SETTINGS.masthead,  settings.masthead  || {});
+      settings.epigraph  = Object.assign({}, DEFAULT_SETTINGS.epigraph,  settings.epigraph  || {});
+      settings.pullQuote = Object.assign({}, DEFAULT_SETTINGS.pullQuote, settings.pullQuote || {});
+      if (!Array.isArray(settings.notes))      settings.notes      = DEFAULT_SETTINGS.notes.slice();
+      if (!Array.isArray(settings.categories)) settings.categories = DEFAULT_SETTINGS.categories.slice();
       return {
-        settings: Object.assign({}, DEFAULT_SETTINGS, parsed.settings || {}),
-        essays:   Array.isArray(parsed.essays) ? parsed.essays : DEFAULT_ESSAYS
+        settings,
+        essays: Array.isArray(parsed.essays) ? parsed.essays : DEFAULT_ESSAYS
       };
     } catch (e) {
       console.warn('[Unplugged] store load failed, using defaults:', e);
@@ -185,11 +193,14 @@
 
   function updateSettings(partial) {
     const data = loadData();
-    data.settings = Object.assign({}, data.settings, partial);
-    // deep-merge nested maps
-    if (partial.masthead)  data.settings.masthead  = Object.assign({}, data.settings.masthead,  partial.masthead);
-    if (partial.epigraph)  data.settings.epigraph  = Object.assign({}, data.settings.epigraph,  partial.epigraph);
-    if (partial.pullQuote) data.settings.pullQuote = Object.assign({}, data.settings.pullQuote, partial.pullQuote);
+    // Merge nested objects against the CURRENT saved values before the
+    // top-level replace, so callers can omit unrelated fields without
+    // losing them.
+    const merged = Object.assign({}, partial);
+    if (partial.masthead)  merged.masthead  = Object.assign({}, data.settings.masthead,  partial.masthead);
+    if (partial.epigraph)  merged.epigraph  = Object.assign({}, data.settings.epigraph,  partial.epigraph);
+    if (partial.pullQuote) merged.pullQuote = Object.assign({}, data.settings.pullQuote, partial.pullQuote);
+    data.settings = Object.assign({}, data.settings, merged);
     saveData(data);
     return data.settings;
   }

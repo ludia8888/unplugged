@@ -806,11 +806,11 @@
     text-transform: uppercase;
     padding: 6px 11px;
     border-radius: 100px;
-    border: 1px solid var(--hairline);
+    border: 1px solid var(--cat-color, var(--hairline));
     background: var(--paper);
-    color: var(--ink-muted);
+    color: var(--cat-color, var(--ink-muted));
     cursor: pointer;
-    transition: all .2s;
+    transition: border-color .2s, color .2s, background .2s;
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -819,6 +819,7 @@
   .cat-chip:hover {
     border-color: var(--ink);
     color: var(--ink);
+    background: var(--paper-warm);
   }
   .cat-chip.active {
     background: var(--ink);
@@ -828,10 +829,10 @@
   .cat-chip .dot {
     width: 6px; height: 6px;
     border-radius: 50%;
-    background: currentColor;
-    opacity: .55;
+    background: var(--cat-color, currentColor);
+    opacity: .8;
   }
-  .cat-chip.active .dot { opacity: 1; }
+  .cat-chip.active .dot { background: var(--paper); opacity: 1; }
 
   /* ─── Categories panel ───────────────────────────────── */
   .cat-list { display: flex; flex-direction: column; }
@@ -1782,8 +1783,7 @@
       const id = delBtn.dataset.del;
       confirmModal('Delete this essay?', 'This cannot be undone.', () => {
         S.deleteEssay(id);
-        renderStats();
-        renderEssayList();
+        refreshEssayViews();
         toast('essay removed.');
       });
       return;
@@ -1795,8 +1795,7 @@
   document.getElementById('newEssayBtn').addEventListener('click', () => {
     const fresh = S.newEssayTemplate();
     S.saveEssay(fresh);
-    renderStats();
-    renderEssayList();
+    refreshEssayViews();
     openEditor(fresh.id);
   });
 
@@ -1851,8 +1850,8 @@
     switchImageTab(initialTab);
     updateImagePreview();
 
-    // layout radios
-    const layout = essay.layout || 'standard';
+    // layout radios — legacy essays used { wide: true } instead of { layout }
+    const layout = essay.layout || (essay.wide ? 'wide' : 'standard');
     document.querySelectorAll('input[name="layout"]').forEach(r => {
       r.checked = (r.value === layout);
     });
@@ -1927,8 +1926,8 @@
       const isActive = currentParts.some(p => p.toLowerCase() === c.name.toLowerCase());
       return `<button type="button" class="cat-chip ${isActive ? 'active' : ''}"
                       data-cat="${escapeAttr(c.name)}"
-                      style="${!isActive ? `border-color: ${escapeAttr(c.color)}; color: ${escapeAttr(c.color)};` : ''}">
-        <span class="dot" style="background: ${escapeAttr(c.color)}"></span>
+                      style="--cat-color: ${escapeAttr(c.color)};">
+        <span class="dot"></span>
         ${escapeHtml(c.name)}
       </button>`;
     }).join('');
@@ -2007,6 +2006,7 @@
     E.imageFile.value = '';
     updateImagePreview();
     renderPreview();
+    renderStorage();
   });
 
   function updateImagePreview() {
@@ -2079,12 +2079,17 @@
 
   document.getElementById('editorBack').addEventListener('click', () => switchPanel('essays'));
 
+  function refreshEssayViews() {
+    renderStats();
+    renderEssayList();
+    renderCategoriesPanel();
+    renderStorage();
+  }
+
   function safeSaveEssay(essay, successMsg) {
     try {
       S.saveEssay(essay);
-      renderStats();
-      renderEssayList();
-      renderStorage();
+      refreshEssayViews();
       toast(successMsg);
     } catch (err) {
       if (err && String(err).toLowerCase().includes('quota')) {
@@ -2115,9 +2120,7 @@
     confirmModal('Delete this essay?', 'This cannot be undone.', () => {
       S.deleteEssay(currentEditingId);
       currentEditingId = null;
-      renderStats();
-      renderEssayList();
-      renderStorage();
+      refreshEssayViews();
       switchPanel('essays');
       toast('essay removed.');
     });
