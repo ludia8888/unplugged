@@ -1521,9 +1521,12 @@
 
   /* ─── Book mode ──────────────────────────────────────── */
   :root {
-    --topbar-h: 56px;
+    /* Measured against the actual topbar (theme-toggle pushes it to ~65px on desktop,
+       ~57-60px on mobile). A small buffer prevents the spine line from slipping
+       under the topbar while we're between font-loads. */
+    --topbar-h: 68px;
   }
-  @media (max-width: 600px) { :root { --topbar-h: 48px; } }
+  @media (max-width: 600px) { :root { --topbar-h: 60px; } }
 
   main.pages { display: block; }
 
@@ -1618,7 +1621,10 @@
     height: 100dvh;
   }
   body.is-book .progress { display: none; }
-  body.is-book .listener { opacity: .9; }
+  /* Book mode is a quiet reading posture — hide the Spotify pill so it
+     never collides with the page controls on narrow viewports.
+     Music keeps playing if it was started before entering book mode. */
+  body.is-book .listener { display: none; }
 
   /* Horizontal pages */
   body.is-book main.pages {
@@ -1826,6 +1832,13 @@
   body.is-book main.pages > section.notes       { padding-top: clamp(24px, 5vh, 48px); }
   body.is-book main.pages > section.letter      { padding-top: 0; }
   body.is-book main.pages > .colophon           { padding-top: clamp(24px, 5vh, 48px); }
+
+  /* Scale the masthead title down in book mode so it breathes inside a single
+     page rather than filling it edge-to-edge. */
+  body.is-book main.pages > section.masthead .masthead-title {
+    font-size: clamp(72px, 14vw, 200px);
+  }
+  body.is-book main.pages > section.masthead .masthead-sub { margin-top: clamp(28px, 4vh, 44px); }
 </style>
 </head>
 <body class="is-loading">
