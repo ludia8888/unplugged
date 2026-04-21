@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor / tooling
+.vscode/
+.idea/
+*.swp
+*.swo
+.claude/
+
+# Local state
+.env
+.env.local
+*.log

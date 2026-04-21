@@ -1,0 +1,2465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#efe8d6">
+<meta name="robots" content="noindex, nofollow">
+<title>Editor's Desk — Unplugged</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,0..100;1,9..144,300..900,0..100&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper:        #efe8d6;
+    --paper-warm:   #e8dfca;
+    --paper-shade:  #e0d6be;
+    --ink:          #14100a;
+    --ink-soft:     #2c251c;
+    --ink-muted:    #6e6454;
+    --ink-faint:    #9c907b;
+    --hairline:     #c2b59c;
+    --hairline-soft:#d6cab2;
+    --sienna:       #a4401a;
+    --persimmon:    #c24a15;
+    --winter:       #3a5060;
+    --gold:         #c99a55;
+    --danger:       #983219;
+
+    --serif:  'Fraunces', Georgia, serif;
+    --italic: 'Instrument Serif', Georgia, serif;
+    --mono:   'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --ease:      cubic-bezier(.2,.7,.2,1);
+    --ease-slow: cubic-bezier(.16,.84,.24,1);
+
+    --pad-x: clamp(20px, 4vw, 56px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-variation-settings: 'opsz' 14, 'SOFT' 50, 'wght' 380;
+    line-height: 1.55;
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.12;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.06 0 0 0 0 0.04 0 0 0 .7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .shell { max-width: 1280px; margin: 0 auto; padding: 0 var(--pad-x); }
+
+  /* ─── Top bar ─────────────────────────────────────────── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding: 14px 0;
+    background: color-mix(in oklab, var(--paper) 90%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .topbar-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .topbar .mark {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 20px;
+    color: var(--ink);
+  }
+  .topbar .mark small {
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-left: 12px;
+  }
+  .topbar .actions { display: flex; gap: 8px; align-items: center; }
+
+  /* ─── Buttons ────────────────────────────────────────── */
+  .btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    padding: 10px 18px;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: background .3s var(--ease), color .3s var(--ease), letter-spacing .3s var(--ease);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--ink); color: var(--paper); letter-spacing: .24em; }
+  .btn.primary { background: var(--ink); color: var(--paper); }
+  .btn.primary:hover { background: var(--sienna); border-color: var(--sienna); }
+  .btn.ghost { border-color: var(--hairline); color: var(--ink-muted); }
+  .btn.ghost:hover { background: var(--paper-warm); color: var(--ink); border-color: var(--ink); }
+  .btn.danger { border-color: var(--danger); color: var(--danger); }
+  .btn.danger:hover { background: var(--danger); color: var(--paper); }
+  .btn.small { padding: 7px 14px; font-size: 10px; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ─── Inputs ─────────────────────────────────────────── */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .field .hint {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-top: -2px;
+  }
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  input[type="color"],
+  textarea,
+  select {
+    font-family: var(--serif);
+    font-variation-settings: 'wght' 400;
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--paper-warm);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 12px 14px;
+    outline: none;
+    width: 100%;
+    transition: border-color .2s, background .2s;
+  }
+  input[type="color"] {
+    padding: 4px;
+    height: 44px;
+    width: 60px;
+    cursor: pointer;
+  }
+  textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--ink);
+    background: var(--paper);
+  }
+  .field.title-field input { font-family: var(--italic); font-style: italic; font-size: 28px; }
+
+  /* ─── Auth ───────────────────────────────────────────── */
+  .auth-screen {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: var(--pad-x);
+  }
+  .auth-card { max-width: 440px; width: 100%; text-align: center; }
+  .auth-card .mark-large {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: clamp(48px, 10vw, 76px);
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -.025em;
+  }
+  .auth-card .lede {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink-muted);
+    margin: 16px 0 40px;
+  }
+  .auth-card form { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+  .auth-card .auth-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+  .auth-card .error {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--danger);
+    min-height: 16px;
+    text-align: center;
+    margin-top: 10px;
+  }
+  .auth-card .back {
+    display: block; margin-top: 32px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: var(--ink-muted); text-decoration: none;
+  }
+  .auth-card .back:hover { color: var(--ink); }
+
+  /* ─── Dashboard ─────────────────────────────────────── */
+  .dashboard {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 40px;
+    padding: 32px 0 80px;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 80px;
+    align-self: start;
+    padding-right: 24px;
+    border-right: 1px solid var(--hairline-soft);
+    min-height: 400px;
+  }
+  .sidebar h3 {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin: 28px 0 12px;
+  }
+  .sidebar h3:first-child { margin-top: 0; }
+  .sidebar .overview {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .sidebar .overview .stat-num {
+    font-family: var(--serif);
+    font-style: normal;
+    font-variation-settings: 'opsz' 60, 'wght' 300;
+    font-size: 48px;
+    display: block;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -.02em;
+    margin-bottom: 6px;
+  }
+  .sidebar .stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding: 6px 0;
+  }
+  .sidebar .stat-row strong { color: var(--ink); font-weight: 500; }
+  .sidebar .nav-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+  .sidebar .nav-list button {
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    font-family: var(--serif);
+    font-size: 15px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .sidebar .nav-list button:hover { background: var(--paper-warm); color: var(--ink); }
+  .sidebar .nav-list button.active {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--italic);
+    font-style: italic;
+  }
+  .sidebar .nav-list button .count {
+    float: right;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    opacity: .6;
+  }
+  .sidebar .admin-atmosphere {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding-top: 20px;
+    border-top: 1px solid var(--hairline-soft);
+    margin-top: 24px;
+    line-height: 1.8;
+  }
+
+  /* ─── Main ────────────────────────────────────────────── */
+  .main { min-width: 0; }
+  .panel { display: none; animation: fadeIn .5s var(--ease); }
+  .panel.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    padding-bottom: 24px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--hairline);
+    flex-wrap: wrap;
+  }
+  .panel-head h2 {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: clamp(36px, 5vw, 56px);
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -.02em;
+  }
+  .panel-head .hint {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-top: 6px;
+  }
+
+  /* ─── Essay list ─────────────────────────────────────── */
+  .essay-list { display: flex; flex-direction: column; }
+  .essay-row {
+    display: grid;
+    grid-template-columns: 50px 60px 120px 1fr auto;
+    gap: 18px;
+    align-items: center;
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--hairline-soft);
+    transition: background .2s, padding .3s var(--ease);
+    cursor: pointer;
+  }
+  .essay-row:hover { background: var(--paper-warm); padding-left: 18px; }
+  .r-thumb {
+    width: 50px; height: 50px;
+    border-radius: 6px;
+    background: var(--paper-shade) center/cover no-repeat;
+    font-family: var(--italic);
+    font-style: italic;
+    color: var(--ink-faint);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    overflow: hidden;
+  }
+  .essay-row .r-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .18em;
+    color: var(--ink-muted);
+  }
+  .essay-row .r-status {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 100px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .status-featured { background: var(--sienna); color: var(--paper); }
+  .status-published { background: var(--paper-shade); color: var(--ink); }
+  .status-draft { background: transparent; color: var(--ink-muted); border: 1px dashed var(--hairline); }
+  .essay-row .r-title {
+    font-family: var(--serif);
+    font-variation-settings: 'opsz' 24, 'wght' 400;
+    font-size: 17px;
+    color: var(--ink);
+    letter-spacing: -.01em;
+  }
+  .essay-row .r-title em { font-family: var(--italic); font-style: italic; }
+  .essay-row .r-title .r-sub {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-top: 4px;
+  }
+  .essay-row .r-actions { display: flex; gap: 6px; opacity: 0; transition: opacity .2s; }
+  .essay-row:hover .r-actions { opacity: 1; }
+
+  .empty {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--ink-muted);
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 18px;
+    border: 1px dashed var(--hairline);
+    border-radius: 12px;
+  }
+
+  /* ─── Editor ─────────────────────────────────────────── */
+  .editor {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 40px;
+  }
+  .editor-main { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+  .editor-side {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-left: 28px;
+    border-left: 1px solid var(--hairline-soft);
+  }
+  .editor-side .card {
+    padding: 18px;
+    background: var(--paper-warm);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    gap: 16px;
+  }
+  .toggle-row .lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .toggle-row .desc {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+  .switch {
+    position: relative;
+    width: 40px; height: 22px;
+    background: var(--hairline);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: background .3s var(--ease);
+    flex-shrink: 0;
+  }
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 18px; height: 18px;
+    background: var(--paper);
+    border-radius: 50%;
+    transition: transform .3s var(--ease);
+  }
+  .switch.on { background: var(--ink); }
+  .switch.on::after { transform: translateX(18px); }
+
+  .editor-body {
+    font-family: var(--serif);
+    font-variation-settings: 'opsz' 16, 'wght' 390;
+    font-size: 17px;
+    line-height: 1.7;
+    min-height: 380px;
+  }
+  .inline-help {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 6px;
+  }
+  .inline-help code {
+    background: var(--paper-warm);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: var(--ink-muted);
+    font-family: var(--mono);
+  }
+
+  /* ─── Image upload ───────────────────────────────────── */
+  .image-tabs {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    background: var(--paper-warm);
+    border-radius: 100px;
+    border: 1px solid var(--hairline);
+  }
+  .image-tabs button {
+    background: transparent;
+    border: 0;
+    padding: 6px 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    cursor: pointer;
+    border-radius: 100px;
+    transition: all .2s;
+  }
+  .image-tabs button.active { background: var(--ink); color: var(--paper); }
+  .image-panel { display: none; }
+  .image-panel.active { display: block; }
+
+  .drop-zone {
+    border: 2px dashed var(--hairline);
+    border-radius: 10px;
+    padding: 32px 20px;
+    text-align: center;
+    background: var(--paper-warm);
+    transition: border-color .3s, background .3s;
+    cursor: pointer;
+  }
+  .drop-zone:hover, .drop-zone.drag {
+    border-color: var(--sienna);
+    background: color-mix(in oklab, var(--sienna) 8%, var(--paper-warm));
+  }
+  .drop-zone .dz-icon {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 42px;
+    line-height: 1;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+  }
+  .drop-zone .dz-text {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 16px;
+    color: var(--ink-soft);
+  }
+  .drop-zone .dz-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-top: 8px;
+  }
+
+  .image-preview {
+    margin-top: 14px;
+    padding: 14px;
+    background: var(--paper-warm);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 10px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .image-preview img {
+    width: 120px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 6px;
+    background: var(--paper-shade);
+    display: block;
+  }
+  .image-preview .ip-info {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    line-height: 1.8;
+  }
+  .image-preview .ip-info strong { color: var(--ink); font-weight: 500; }
+  .image-preview .ip-remove {
+    background: transparent;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .image-preview .ip-remove:hover { background: var(--danger); color: var(--paper); }
+
+  /* ─── Layout selector ────────────────────────────────── */
+  .layout-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+  }
+  .layout-option {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--hairline-soft);
+    background: var(--paper);
+    transition: all .2s var(--ease);
+  }
+  .layout-option:hover { border-color: var(--ink-muted); background: var(--paper-warm); }
+  .layout-option input { display: none; }
+  .layout-option.active {
+    border-color: var(--ink);
+    background: var(--paper-warm);
+    box-shadow: 0 4px 12px -6px rgba(20, 16, 10, .2);
+  }
+  .layout-option .lp-frame {
+    width: 72px;
+    height: 48px;
+    border: 1px solid var(--hairline);
+    background: var(--paper-shade);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+  }
+  .layout-option span {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    text-align: center;
+  }
+  .layout-option.active span { color: var(--ink); }
+
+  /* Mini wireframes */
+  .lp-standard::after, .lp-wide::after, .lp-tall::after, .lp-quote::after {
+    content: '';
+    position: absolute;
+    background: var(--ink-muted);
+    opacity: .35;
+  }
+  .lp-standard::after { top: 10px; left: 6px; right: 6px; height: 2px; box-shadow: 0 6px 0 var(--ink-muted), 0 12px 0 var(--ink-muted); }
+  .lp-wide::after { top: 12px; left: 6px; right: 18px; height: 3px; box-shadow: 0 8px 0 var(--ink-muted), 0 16px 0 var(--ink-muted); }
+  .lp-tall::after { top: 8px; left: 6px; right: 12px; height: 2px; box-shadow: 0 6px 0 var(--ink-muted), 0 12px 0 var(--ink-muted), 0 18px 0 var(--ink-muted), 0 26px 0 var(--ink-muted), 0 32px 0 var(--ink-muted); }
+  .lp-quote { align-items: center; justify-content: center; }
+  .lp-quote::after {
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px; height: 2px;
+    box-shadow: 0 -6px 0 var(--ink-muted), 0 6px 0 var(--ink-muted);
+    opacity: .55;
+  }
+
+  .lp-portrait {
+    flex-direction: column;
+  }
+  .lp-portrait::before {
+    content: '';
+    width: 100%;
+    height: 55%;
+    background: linear-gradient(135deg, var(--sienna), var(--gold));
+    opacity: .7;
+  }
+  .lp-portrait::after {
+    content: '';
+    flex: 1;
+    margin: 4px 6px;
+    background: var(--ink-muted);
+    opacity: .35;
+    clip-path: polygon(0 0, 100% 0, 100% 30%, 60% 30%, 60% 60%, 100% 60%, 100% 90%, 0 90%);
+  }
+
+  .lp-landscape {
+    display: flex;
+  }
+  .lp-landscape::before {
+    content: '';
+    width: 45%;
+    background: linear-gradient(135deg, var(--sienna), var(--gold));
+    opacity: .7;
+  }
+  .lp-landscape::after {
+    content: '';
+    flex: 1;
+    margin: 8px 6px;
+    background: var(--ink-muted);
+    opacity: .35;
+    clip-path: polygon(0 0, 100% 0, 100% 20%, 0 20%, 0 35%, 100% 35%, 100% 50%, 0 50%);
+  }
+
+  .lp-cover {
+    background: linear-gradient(135deg, var(--ink-soft), var(--sienna)) !important;
+  }
+  .lp-cover::after {
+    content: '';
+    position: absolute;
+    bottom: 6px; left: 6px; right: 6px;
+    height: 2px;
+    background: var(--paper);
+    opacity: .75;
+    box-shadow: 0 -5px 0 var(--paper);
+  }
+
+  /* Featured layout previews */
+  .lp-editorial::before {
+    content: '';
+    position: absolute;
+    top: 8px; bottom: 8px; left: 6px;
+    width: 60%;
+    background: repeating-linear-gradient(to bottom, var(--ink-muted) 0 2px, transparent 2px 6px);
+    opacity: .4;
+  }
+  .lp-editorial::after {
+    content: '';
+    position: absolute;
+    top: 8px; bottom: 8px; right: 6px;
+    width: 26%;
+    border-left: 1px solid var(--ink-muted);
+    opacity: .5;
+  }
+
+  .lp-hero::before {
+    content: '';
+    position: absolute;
+    top: 4px; left: 4px; right: 4px;
+    height: 44%;
+    background: linear-gradient(135deg, var(--sienna), var(--gold));
+    opacity: .7;
+  }
+  .lp-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 6px; left: 6px; right: 6px;
+    height: 4px;
+    background: var(--ink-muted);
+    opacity: .35;
+    box-shadow: 0 6px 0 var(--ink-muted), 0 12px 0 var(--ink-muted);
+  }
+
+  .lp-split::before {
+    content: '';
+    position: absolute;
+    top: 4px; bottom: 4px; left: 4px;
+    width: 42%;
+    background: linear-gradient(135deg, var(--sienna), var(--gold));
+    opacity: .7;
+  }
+  .lp-split::after {
+    content: '';
+    position: absolute;
+    top: 10px; bottom: 10px; right: 6px;
+    width: 45%;
+    background: repeating-linear-gradient(to bottom, var(--ink-muted) 0 2px, transparent 2px 6px);
+    opacity: .4;
+  }
+
+  /* ─── Category chips ─────────────────────────────────── */
+  .cat-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .cat-chip {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    padding: 6px 11px;
+    border-radius: 100px;
+    border: 1px solid var(--hairline);
+    background: var(--paper);
+    color: var(--ink-muted);
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cat-chip:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .cat-chip.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .cat-chip .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: .55;
+  }
+  .cat-chip.active .dot { opacity: 1; }
+
+  /* ─── Categories panel ───────────────────────────────── */
+  .cat-list { display: flex; flex-direction: column; }
+  .cat-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 90px 80px auto;
+    gap: 18px;
+    align-items: center;
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--hairline-soft);
+    transition: background .2s, padding .3s var(--ease);
+  }
+  .cat-row:hover { background: var(--paper-warm); padding-left: 18px; }
+  .cat-swatch {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--hairline);
+  }
+  .cat-row .c-name {
+    font-family: var(--serif);
+    font-variation-settings: 'opsz' 20, 'wght' 400;
+    font-size: 17px;
+    color: var(--ink);
+  }
+  .cat-row .c-slug {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    display: block;
+    margin-top: 2px;
+  }
+  .cat-row .c-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .cat-row .c-count strong {
+    font-family: var(--serif);
+    font-variation-settings: 'opsz' 30, 'wght' 400;
+    font-size: 20px;
+    color: var(--ink);
+    font-weight: 400;
+    display: block;
+  }
+  .cat-row .c-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .cat-row .c-editing {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+  .cat-row .c-editing input[type="color"] { height: 34px; }
+  .cat-row .c-editing input[type="text"] { padding: 8px 12px; font-size: 15px; }
+
+  .cat-add {
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 16px;
+    background: var(--paper-warm);
+    border: 1px dashed var(--hairline);
+    border-radius: 10px;
+    margin-bottom: 24px;
+  }
+  .cat-add input[type="color"] { height: 40px; }
+
+  /* ─── Preview ────────────────────────────────────────── */
+  .preview {
+    padding: 24px;
+    background: var(--paper-warm);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 10px;
+  }
+  .preview-head {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--sienna);
+    border-bottom: 1px solid var(--hairline-soft);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  .preview h3 {
+    font-family: var(--serif);
+    font-variation-settings: 'opsz' 60, 'wght' 380, 'SOFT' 80;
+    font-size: clamp(24px, 3vw, 32px);
+    line-height: 1.1;
+    margin-bottom: 14px;
+    letter-spacing: -.02em;
+  }
+  .preview h3 em { font-family: var(--italic); font-style: italic; }
+  .preview .p-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 14px;
+    background: var(--paper-shade);
+    display: block;
+  }
+  .preview .p-dek {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+  .preview .p-body {
+    font-family: var(--serif);
+    font-variation-settings: 'wght' 390;
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+
+  /* ─── Settings ───────────────────────────────────────── */
+  .settings-grid { display: flex; flex-direction: column; gap: 36px; }
+  .settings-section {
+    padding: 24px;
+    background: var(--paper-warm);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 10px;
+  }
+  .settings-section h3 {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 26px;
+    color: var(--ink);
+    margin-bottom: 6px;
+    letter-spacing: -.02em;
+  }
+  .settings-section .section-hint {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 22px;
+  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .settings-actions {
+    display: flex; gap: 10px; justify-content: flex-end;
+    padding-top: 18px;
+    border-top: 1px dashed var(--hairline);
+    margin-top: 22px;
+  }
+
+  /* ─── Storage bar ────────────────────────────────────── */
+  .storage-bar {
+    height: 6px;
+    background: var(--paper-shade);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .storage-fill {
+    height: 100%;
+    background: var(--ink);
+    transition: width .4s var(--ease), background .4s;
+  }
+  .storage-fill.warn  { background: var(--gold); }
+  .storage-fill.danger { background: var(--danger); }
+  .storage-meta {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-top: 8px;
+  }
+
+  /* ─── Toast + modal ──────────────────────────────────── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 10px 20px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    border-radius: 100px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s, transform .3s var(--ease);
+    z-index: 1000;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 16, 10, .4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 500;
+    display: none;
+    place-items: center;
+    padding: 24px;
+  }
+  .modal-backdrop.show { display: grid; }
+  .modal {
+    background: var(--paper);
+    padding: 36px;
+    border-radius: 14px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    border: 1px solid var(--hairline);
+  }
+  .modal h4 {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: 28px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    letter-spacing: -.02em;
+  }
+  .modal p {
+    font-family: var(--serif);
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+    font-size: 15px;
+  }
+  .modal-actions { display: flex; gap: 10px; justify-content: center; }
+
+  /* ─── Responsive ─────────────────────────────────────── */
+  @media (max-width: 1000px) {
+    .dashboard { grid-template-columns: 1fr; gap: 0; }
+    .sidebar {
+      position: static;
+      border-right: 0;
+      border-bottom: 1px solid var(--hairline-soft);
+      padding: 24px 0;
+      margin-bottom: 24px;
+    }
+    .sidebar .nav-list {
+      flex-direction: row;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      gap: 6px;
+    }
+    .sidebar .nav-list button { white-space: nowrap; }
+    .editor { grid-template-columns: 1fr; gap: 24px; }
+    .editor-side {
+      padding-left: 0;
+      border-left: 0;
+      padding-top: 24px;
+      border-top: 1px solid var(--hairline-soft);
+    }
+  }
+
+  @media (max-width: 700px) {
+    .two-col { grid-template-columns: 1fr; }
+    .essay-row { grid-template-columns: 44px 50px 1fr auto; gap: 10px; padding: 12px 8px; }
+    .essay-row .r-status { display: none; }
+    .essay-row .r-actions { opacity: 1; }
+    .panel-head { flex-direction: column; align-items: flex-start; }
+    .panel-head .hint { margin-top: 8px; }
+    .topbar .mark small { display: none; }
+    .btn { padding: 9px 14px; font-size: 10px; }
+    .btn.small { padding: 6px 10px; }
+    .cat-row {
+      grid-template-columns: 24px 1fr auto;
+      gap: 12px;
+    }
+    .cat-row .c-count { display: none; }
+    .cat-add { grid-template-columns: 40px 1fr; }
+    .cat-add .btn { grid-column: 1 / -1; }
+    .layout-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 480px) {
+    .topbar-inner { gap: 8px; }
+    .topbar .actions { gap: 4px; }
+    .btn { padding: 8px 12px; letter-spacing: .12em; }
+    .image-preview { flex-direction: column; }
+    .image-preview img { width: 100%; height: 160px; }
+    .layout-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  ::selection { background: var(--sienna); color: var(--paper); }
+</style>
+</head>
+<body>
+
+<!-- ─── Auth screen ──────────────────────────────────── -->
+<div class="auth-screen" id="authScreen" style="display:none">
+  <div class="auth-card">
+    <div class="mark-large"><em>Editor's desk</em></div>
+    <p class="lede" id="authLede">A quiet room. Enter a passphrase to continue.</p>
+    <form id="authForm">
+      <div class="field">
+        <label id="authLabel" for="authPw">Passphrase</label>
+        <input type="password" id="authPw" autocomplete="current-password" required placeholder="· · · · · ·">
+        <div class="hint" id="authHint">At least four characters. Stored only on this device.</div>
+      </div>
+      <div class="field" id="authConfirmField" style="display:none">
+        <label for="authPw2">Confirm</label>
+        <input type="password" id="authPw2" autocomplete="new-password" placeholder="· · · · · ·">
+      </div>
+      <div class="auth-actions">
+        <button class="btn primary" type="submit" id="authSubmit">Enter →</button>
+      </div>
+      <div class="error" id="authError">&nbsp;</div>
+    </form>
+    <a class="back" href="index.html">← Back to the journal</a>
+  </div>
+</div>
+
+<!-- ─── App ──────────────────────────────────────────── -->
+<div id="app" style="display:none">
+
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <div class="mark"><em>Unplugged</em> <small>Editor's desk</small></div>
+      <div class="actions">
+        <a class="btn ghost small" href="index.html" target="_blank" rel="noopener">View journal ↗</a>
+        <button class="btn small" id="logoutBtn">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell dashboard">
+
+    <aside class="sidebar">
+      <div class="overview">
+        <span class="stat-num" id="statTotal">—</span>
+        <span>essays in the archive, quietly kept</span>
+      </div>
+
+      <h3>Counts</h3>
+      <div class="stat-row"><span>Published</span><strong id="statPub">0</strong></div>
+      <div class="stat-row"><span>Drafts</span><strong id="statDraft">0</strong></div>
+      <div class="stat-row"><span>Featured</span><strong id="statFeat">0</strong></div>
+      <div class="stat-row"><span>Categories</span><strong id="statCats">0</strong></div>
+
+      <h3>Workspaces</h3>
+      <ul class="nav-list" id="navList">
+        <li><button data-panel="essays" class="active">Essays <span class="count" id="navEssayCount"></span></button></li>
+        <li><button data-panel="categories">Categories <span class="count" id="navCatCount"></span></button></li>
+        <li><button data-panel="listening">Listening room</button></li>
+        <li><button data-panel="masthead">Masthead & epigraph</button></li>
+        <li><button data-panel="notes">Margin notes</button></li>
+        <li><button data-panel="account">Account</button></li>
+      </ul>
+
+      <div class="admin-atmosphere" id="adminAtmosphere">—</div>
+    </aside>
+
+    <main class="main">
+
+      <!-- ─── Panel: Essays list ─────────────────────── -->
+      <section class="panel active" data-panel="essays">
+        <div class="panel-head">
+          <div>
+            <h2>The essays</h2>
+            <div class="hint">Everything you have written, or are writing.</div>
+          </div>
+          <button class="btn primary" id="newEssayBtn">+ New essay</button>
+        </div>
+        <div class="essay-list" id="essayList"></div>
+      </section>
+
+      <!-- ─── Panel: Editor ──────────────────────────── -->
+      <section class="panel" data-panel="editor">
+        <div class="panel-head">
+          <div>
+            <h2 id="editorHeading">Edit essay</h2>
+            <div class="hint" id="editorSub">Write slowly. Read with time.</div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn ghost small" id="editorBack">← Essays</button>
+            <button class="btn danger small" id="editorDelete">Delete</button>
+            <button class="btn small" id="editorSave">Save draft</button>
+            <button class="btn primary small" id="editorPublish">Save & publish</button>
+          </div>
+        </div>
+
+        <div class="editor">
+          <div class="editor-main">
+
+            <div class="field">
+              <label for="e_num">Essay number</label>
+              <input type="text" id="e_num" maxlength="6" placeholder="047">
+            </div>
+
+            <div class="field">
+              <label>Category</label>
+              <input type="text" id="e_cat" placeholder="On Beauty · On Sound">
+              <div class="hint">Pick from your catalog below, or type your own. Chain with <code style="font-family:var(--mono);">·</code>.</div>
+              <div class="cat-chips" id="catChips"></div>
+            </div>
+
+            <div class="field title-field">
+              <label for="e_title">Title</label>
+              <input type="text" id="e_title" placeholder="On the Afterlife of Sound">
+            </div>
+
+            <div class="field">
+              <label for="e_titleHtml">Title (with italics)</label>
+              <input type="text" id="e_titleHtml" placeholder="On the &lt;em&gt;Afterlife&lt;/em&gt; of Sound">
+              <div class="inline-help">Wrap italic fragments with <code>&lt;em&gt;…&lt;/em&gt;</code>. Leave blank to use the plain title.</div>
+            </div>
+
+            <div class="field">
+              <label for="e_dek">Dek · subtitle</label>
+              <textarea id="e_dek" rows="3" placeholder="One or two sentences. The first thing a reader sees."></textarea>
+              <div class="inline-help">Inline HTML allowed: <code>&lt;em&gt;</code>, <code>&lt;br&gt;</code>.</div>
+            </div>
+
+            <!-- IMAGE BLOCK -->
+            <div class="field">
+              <label>Image</label>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap: wrap;">
+                <div class="image-tabs" id="imageTabs">
+                  <button data-tab="url" class="active">Link</button>
+                  <button data-tab="upload">Upload</button>
+                </div>
+                <div class="hint" id="imageHint">Paste any image URL, or upload a file.</div>
+              </div>
+
+              <div class="image-panel active" data-tab="url" style="margin-top:10px;">
+                <input type="text" id="e_imageUrl" placeholder="https://example.com/photo.jpg">
+              </div>
+
+              <div class="image-panel" data-tab="upload" style="margin-top:10px;">
+                <div class="drop-zone" id="dropZone" tabindex="0">
+                  <div class="dz-icon">↡</div>
+                  <div class="dz-text">Drop an image here, or click to browse</div>
+                  <div class="dz-sub">JPG · PNG · WebP · up to ~4MB. Auto-resized to 1600px.</div>
+                  <input type="file" id="e_imageFile" accept="image/*" style="display:none">
+                </div>
+              </div>
+
+              <div class="image-preview" id="imagePreview" style="display:none;">
+                <img id="e_imagePreviewImg" alt="">
+                <div class="ip-info">
+                  <div><strong id="ip_source">—</strong></div>
+                  <div id="ip_size">—</div>
+                  <div id="ip_dims">—</div>
+                </div>
+                <button type="button" class="ip-remove" id="ip_remove">Remove</button>
+              </div>
+
+              <div class="two-col" style="margin-top: 14px;">
+                <div class="field">
+                  <label for="e_imageAlt">Alt text</label>
+                  <input type="text" id="e_imageAlt" placeholder="Morning light through curtains">
+                </div>
+                <div class="field">
+                  <label for="e_imageCaption">Caption · credit</label>
+                  <input type="text" id="e_imageCaption" placeholder="Photograph · 2026">
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="e_body">Body</label>
+              <textarea id="e_body" class="editor-body" rows="16" placeholder="The slow part. Write the essay here."></textarea>
+              <div class="inline-help">Plain text + inline HTML. The first letter becomes a dropcap on the journal.</div>
+            </div>
+
+            <div class="field">
+              <label for="e_marginalia">A note in the margin</label>
+              <textarea id="e_marginalia" rows="3" placeholder="Optional marginalia shown beside the essay."></textarea>
+            </div>
+
+          </div>
+
+          <aside class="editor-side">
+
+            <div class="card">
+              <div class="toggle-row">
+                <div>
+                  <div class="lbl">Featured</div>
+                  <div class="desc">Show in the hero. Only one at a time.</div>
+                </div>
+                <div class="switch" id="tog_featured"></div>
+              </div>
+              <div class="toggle-row" style="border-top: 1px dashed var(--hairline); padding-top: 14px;">
+                <div>
+                  <div class="lbl">Published</div>
+                  <div class="desc">Visible on the journal.</div>
+                </div>
+                <div class="switch" id="tog_published"></div>
+              </div>
+            </div>
+
+            <!-- LAYOUT PICKER -->
+            <div class="card">
+              <div>
+                <div class="lbl" style="font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink);">Grid layout</div>
+                <div class="desc" style="font-family:var(--italic); font-style:italic; font-size:13px; color:var(--ink-muted); margin-top: 2px;">How this essay appears in the archive grid.</div>
+              </div>
+              <div class="layout-grid" id="layoutGrid">
+                <label class="layout-option"><input type="radio" name="layout" value="standard"><div class="lp-frame lp-standard"></div><span>Standard</span></label>
+                <label class="layout-option"><input type="radio" name="layout" value="wide"><div class="lp-frame lp-wide"></div><span>Wide</span></label>
+                <label class="layout-option"><input type="radio" name="layout" value="tall"><div class="lp-frame lp-tall"></div><span>Tall</span></label>
+                <label class="layout-option"><input type="radio" name="layout" value="portrait"><div class="lp-frame lp-portrait"></div><span>Portrait</span></label>
+                <label class="layout-option"><input type="radio" name="layout" value="landscape"><div class="lp-frame lp-landscape"></div><span>Landscape</span></label>
+                <label class="layout-option"><input type="radio" name="layout" value="cover"><div class="lp-frame lp-cover"></div><span>Cover</span></label>
+                <label class="layout-option"><input type="radio" name="layout" value="quote"><div class="lp-frame lp-quote"></div><span>Quote</span></label>
+              </div>
+            </div>
+
+            <div class="card" id="featuredLayoutCard" style="display:none;">
+              <div>
+                <div class="lbl" style="font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink);">Featured layout</div>
+                <div class="desc" style="font-family:var(--italic); font-style:italic; font-size:13px; color:var(--ink-muted); margin-top: 2px;">How this essay shows in the hero section.</div>
+              </div>
+              <div class="layout-grid" id="featuredLayoutGrid">
+                <label class="layout-option"><input type="radio" name="featuredLayout" value="editorial"><div class="lp-frame lp-editorial"></div><span>Editorial</span></label>
+                <label class="layout-option"><input type="radio" name="featuredLayout" value="hero"><div class="lp-frame lp-hero"></div><span>Hero</span></label>
+                <label class="layout-option"><input type="radio" name="featuredLayout" value="split"><div class="lp-frame lp-split"></div><span>Split</span></label>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="field">
+                <label for="e_date">Filed</label>
+                <input type="date" id="e_date">
+              </div>
+              <div class="field">
+                <label for="e_read">Reading time</label>
+                <input type="text" id="e_read" placeholder="14 min · deliberate">
+              </div>
+              <div class="field">
+                <label for="e_author">Author</label>
+                <input type="text" id="e_author" placeholder="S. Lee">
+              </div>
+            </div>
+
+            <div class="preview">
+              <div class="preview-head">Live preview</div>
+              <img class="p-image" id="pv_image" style="display:none;" alt="">
+              <h3 id="pv_title">—</h3>
+              <p class="p-dek" id="pv_dek">—</p>
+              <p class="p-body" id="pv_body">—</p>
+            </div>
+
+          </aside>
+        </div>
+      </section>
+
+      <!-- ─── Panel: Categories ──────────────────────── -->
+      <section class="panel" data-panel="categories">
+        <div class="panel-head">
+          <div>
+            <h2>Categories</h2>
+            <div class="hint">The section names you write under.</div>
+          </div>
+        </div>
+
+        <div class="cat-add">
+          <input type="color" id="newCatColor" value="#a4401a">
+          <input type="text" id="newCatName" placeholder="New category name · On Photography, On Seoul, …">
+          <button class="btn primary" id="addCatBtn">+ Add category</button>
+        </div>
+
+        <div class="cat-list" id="catList"></div>
+      </section>
+
+      <!-- ─── Panel: Listening room ──────────────────── -->
+      <section class="panel" data-panel="listening">
+        <div class="panel-head">
+          <div>
+            <h2>The listening room</h2>
+            <div class="hint">Pick any Spotify track, album, or playlist.</div>
+          </div>
+          <button class="btn primary" id="saveSpotify">Save</button>
+        </div>
+
+        <div class="settings-grid">
+          <div class="settings-section">
+            <h3>What's playing</h3>
+            <div class="section-hint">Paste a Spotify URL or URI</div>
+
+            <div class="field">
+              <label for="s_spotify">Spotify URL or URI</label>
+              <input type="text" id="s_spotify" placeholder="spotify:playlist:… or https://open.spotify.com/...">
+              <div class="hint">
+                Supports tracks, albums, and playlists. Example:
+                <em>https://open.spotify.com/track/1hKdDCpiI9mqz1jVHRKG0E</em>
+              </div>
+            </div>
+
+            <div class="field" style="margin-top: 20px;">
+              <label for="s_label">Display label</label>
+              <input type="text" id="s_label" placeholder="Peaceful Piano">
+              <div class="hint">Shown beside the pill at the bottom-right of the journal.</div>
+            </div>
+
+            <div id="spotifyPreview" style="margin-top: 28px; display: none;">
+              <div class="preview-head">Preview</div>
+              <iframe id="spotifyPreviewFrame"
+                style="width: 100%; height: 152px; border: 0; border-radius: 10px; background: #2c251c;"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"></iframe>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Panel: Masthead ────────────────────────── -->
+      <section class="panel" data-panel="masthead">
+        <div class="panel-head">
+          <div>
+            <h2>Masthead & epigraph</h2>
+            <div class="hint">The first breath of the page.</div>
+          </div>
+          <button class="btn primary" id="saveMasthead">Save</button>
+        </div>
+
+        <div class="settings-grid">
+          <div class="settings-section">
+            <h3>Masthead</h3>
+            <div class="section-hint">Top meta bar and subtitle</div>
+
+            <div class="two-col">
+              <div class="field">
+                <label for="m_issue">Issue line</label>
+                <input type="text" id="m_issue" placeholder="Vol. 01 · Residue 001">
+              </div>
+              <div class="field">
+                <label for="m_season">Season</label>
+                <input type="text" id="m_season" placeholder="Spring Issue · April, 2026">
+              </div>
+            </div>
+
+            <div class="field" style="margin-top: 18px;">
+              <label for="m_english">English subtitle</label>
+              <textarea id="m_english" rows="3"></textarea>
+              <div class="inline-help">Wrap italic fragments with <code>&lt;em&gt;…&lt;/em&gt;</code>.</div>
+            </div>
+
+            <div class="two-col" style="margin-top: 18px;">
+              <div class="field">
+                <label for="m_ktitle">Korean eyebrow</label>
+                <input type="text" id="m_ktitle" placeholder="플러그를 뽑는 시간">
+              </div>
+              <div class="field">
+                <label for="m_korean">Korean subtitle</label>
+                <input type="text" id="m_korean" placeholder="기술과 인간 사이, <br>이미 지나가버린 것에 대한 사랑.">
+              </div>
+            </div>
+
+            <div class="two-col" style="margin-top: 18px;">
+              <div class="field">
+                <label for="m_city">Atmosphere city</label>
+                <input type="text" id="m_city" placeholder="seoul">
+              </div>
+              <div class="field">
+                <label for="m_temp">Temperature line</label>
+                <input type="text" id="m_temp" placeholder="6°c">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Epigraph</h3>
+            <div class="section-hint">The dedication below the masthead</div>
+
+            <div class="field">
+              <label for="m_epLines">Lines · one per row</label>
+              <textarea id="m_epLines" rows="5"></textarea>
+            </div>
+            <div class="field" style="margin-top: 16px;">
+              <label for="m_epSource">Source</label>
+              <input type="text" id="m_epSource">
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Pull quote</h3>
+            <div class="section-hint">The still moment after the essay grid</div>
+            <div class="field">
+              <label for="m_pqLines">Quote · one line per row</label>
+              <textarea id="m_pqLines" rows="4"></textarea>
+            </div>
+            <div class="field" style="margin-top: 16px;">
+              <label for="m_pqSource">Attribution</label>
+              <input type="text" id="m_pqSource">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Panel: Notes ───────────────────────────── -->
+      <section class="panel" data-panel="notes">
+        <div class="panel-head">
+          <div>
+            <h2>Margin notes</h2>
+            <div class="hint">Short fragments. Aphorisms. Found lines.</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn small" id="addNote">+ Add note</button>
+            <button class="btn primary" id="saveNotes">Save</button>
+          </div>
+        </div>
+        <div id="notesEditor" class="settings-grid"></div>
+      </section>
+
+      <!-- ─── Panel: Account ─────────────────────────── -->
+      <section class="panel" data-panel="account">
+        <div class="panel-head">
+          <div>
+            <h2>Account</h2>
+            <div class="hint">Change passphrase. Back up. Storage.</div>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <div class="settings-section">
+            <h3>Storage</h3>
+            <div class="section-hint">How much this browser is holding</div>
+            <div class="storage-bar"><div class="storage-fill" id="storageFill" style="width:0%"></div></div>
+            <div class="storage-meta">
+              <span id="storageNum">— / 5 MB</span>
+              <span id="storageNote">Room for many essays.</span>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Change passphrase</h3>
+            <div class="section-hint">Stored only on this device</div>
+            <div class="two-col">
+              <div class="field">
+                <label for="pw_old">Current</label>
+                <input type="password" id="pw_old" autocomplete="current-password">
+              </div>
+              <div class="field">
+                <label for="pw_new">New</label>
+                <input type="password" id="pw_new" autocomplete="new-password">
+              </div>
+            </div>
+            <div class="settings-actions">
+              <button class="btn primary" id="savePw">Update passphrase</button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Data</h3>
+            <div class="section-hint">Your writing lives in this browser. Back it up.</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn" id="exportBtn">Export JSON backup</button>
+              <label class="btn ghost" style="cursor: pointer;">
+                Import backup
+                <input type="file" accept="application/json" id="importFile" style="display:none">
+              </label>
+              <button class="btn danger" id="resetBtn">Reset to defaults</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ─── Toast + modal ────────────────────────────────── -->
+<div class="toast" id="toast">saved.</div>
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <h4 id="modalTitle">Are you sure?</h4>
+    <p id="modalBody">This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn ghost" id="modalCancel">Cancel</button>
+      <button class="btn danger" id="modalConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/store.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const S = window.UnpluggedStore;
+
+  /* ─── Auth flow ───────────────────────────────────── */
+  const authScreen = document.getElementById('authScreen');
+  const app        = document.getElementById('app');
+  const authForm   = document.getElementById('authForm');
+  const authPw     = document.getElementById('authPw');
+  const authPw2    = document.getElementById('authPw2');
+  const authConfirmField = document.getElementById('authConfirmField');
+  const authError  = document.getElementById('authError');
+  const authLede   = document.getElementById('authLede');
+  const authLabel  = document.getElementById('authLabel');
+  const authHint   = document.getElementById('authHint');
+  const authSubmit = document.getElementById('authSubmit');
+
+  function showAuth() {
+    authScreen.style.display = 'grid';
+    app.style.display = 'none';
+    const setup = !S.hasPassword();
+    if (setup) {
+      authLede.textContent = 'A first time. Create a passphrase to protect this desk.';
+      authLabel.textContent = 'New passphrase';
+      authHint.textContent = 'At least four characters. Stored only on this device.';
+      authConfirmField.style.display = 'flex';
+      authSubmit.textContent = 'Set passphrase →';
+    } else {
+      authLede.textContent = 'A quiet room. Enter your passphrase to continue.';
+      authLabel.textContent = 'Passphrase';
+      authHint.textContent = 'Stored only on this device.';
+      authConfirmField.style.display = 'none';
+      authSubmit.textContent = 'Enter →';
+    }
+    setTimeout(() => authPw.focus(), 60);
+  }
+
+  function showApp() {
+    authScreen.style.display = 'none';
+    app.style.display = 'block';
+    renderAll();
+  }
+
+  authForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    authError.textContent = '';
+    const pw = authPw.value;
+    if (!S.hasPassword()) {
+      if (pw.length < 4) { authError.textContent = 'At least four characters.'; return; }
+      if (pw !== authPw2.value) { authError.textContent = 'Passphrases do not match.'; return; }
+      S.setPassword(pw);
+      showApp();
+    } else {
+      if (S.login(pw)) showApp();
+      else authError.textContent = 'That is not the passphrase.';
+    }
+  });
+
+  if (S.isLoggedIn()) showApp();
+  else showAuth();
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    S.logout();
+    showAuth();
+  });
+
+  /* ─── Navigation ──────────────────────────────────── */
+  const navList = document.getElementById('navList');
+  navList.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-panel]');
+    if (!btn) return;
+    switchPanel(btn.dataset.panel);
+  });
+
+  function switchPanel(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    const target = document.querySelector(`.panel[data-panel="${name}"]`);
+    if (target) target.classList.add('active');
+    document.querySelectorAll('#navList button').forEach(b => {
+      b.classList.toggle('active', b.dataset.panel === name);
+    });
+    if (name === 'editor') {
+      document.querySelectorAll('#navList button').forEach(b => b.classList.remove('active'));
+      document.querySelector('#navList button[data-panel="essays"]').classList.add('active');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ─── Render everything ───────────────────────────── */
+  function renderAll() {
+    renderStats();
+    renderEssayList();
+    renderListeningPanel();
+    renderMastheadPanel();
+    renderNotesPanel();
+    renderCategoriesPanel();
+    renderCategoryChips();
+    renderStorage();
+  }
+
+  /* ─── Sidebar stats ───────────────────────────────── */
+  function renderStats() {
+    const all = S.getEssays();
+    const published = all.filter(e => e.published);
+    const drafts    = all.filter(e => !e.published);
+    const featured  = all.filter(e => e.featured && e.published);
+    const cats      = S.getCategories();
+
+    document.getElementById('statTotal').textContent = String(all.length).padStart(3, '0');
+    document.getElementById('statPub').textContent   = published.length;
+    document.getElementById('statDraft').textContent = drafts.length;
+    document.getElementById('statFeat').textContent  = featured.length;
+    document.getElementById('statCats').textContent  = cats.length;
+    document.getElementById('navEssayCount').textContent = all.length;
+    document.getElementById('navCatCount').textContent   = cats.length;
+  }
+
+  /* ─── Essay list ──────────────────────────────────── */
+  const essayList = document.getElementById('essayList');
+  function renderEssayList() {
+    const all = S.getEssays();
+    if (!all.length) {
+      essayList.innerHTML = `<div class="empty">No essays yet. Begin with the first breath.</div>`;
+      return;
+    }
+    essayList.innerHTML = all.map(e => {
+      const status = e.featured && e.published ? 'featured'
+                   : e.published ? 'published'
+                   : 'draft';
+      const statusLabel = { featured: 'Featured', published: 'Published', draft: 'Draft' }[status];
+      const statusClass = 'status-' + status;
+      const thumbStyle = e.image ? `background-image:url('${escapeCss(e.image)}')` : '';
+      const thumbFallback = e.image ? '' : (e.number || '—');
+      return `
+        <div class="essay-row" data-edit="${escapeAttr(e.id)}">
+          <div class="r-thumb" style="${thumbStyle}">${thumbFallback}</div>
+          <div class="r-num">№ ${escapeHtml(e.number)}</div>
+          <div class="r-status ${statusClass}">${statusLabel}</div>
+          <div class="r-title">
+            ${e.titleHtml || escapeHtml(e.title || 'Untitled')}
+            <span class="r-sub">${escapeHtml(e.category || '—')} · ${S.formatDate(e.date)} · ${escapeHtml(e.readTime || '—')} · ${escapeHtml(e.layout || 'standard')}</span>
+          </div>
+          <div class="r-actions">
+            <button class="btn small" data-edit="${escapeAttr(e.id)}">Edit</button>
+            <button class="btn ghost small" data-del="${escapeAttr(e.id)}">Delete</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  essayList.addEventListener('click', (e) => {
+    const delBtn  = e.target.closest('[data-del]');
+    if (delBtn) {
+      e.stopPropagation();
+      const id = delBtn.dataset.del;
+      confirmModal('Delete this essay?', 'This cannot be undone.', () => {
+        S.deleteEssay(id);
+        renderStats();
+        renderEssayList();
+        toast('essay removed.');
+      });
+      return;
+    }
+    const row = e.target.closest('[data-edit]');
+    if (row) openEditor(row.dataset.edit);
+  });
+
+  document.getElementById('newEssayBtn').addEventListener('click', () => {
+    const fresh = S.newEssayTemplate();
+    S.saveEssay(fresh);
+    renderStats();
+    renderEssayList();
+    openEditor(fresh.id);
+  });
+
+  /* ─── Editor: field refs ──────────────────────────── */
+  let currentEditingId = null;
+  const E = {
+    num:       document.getElementById('e_num'),
+    cat:       document.getElementById('e_cat'),
+    title:     document.getElementById('e_title'),
+    titleHtml: document.getElementById('e_titleHtml'),
+    dek:       document.getElementById('e_dek'),
+    body:      document.getElementById('e_body'),
+    marg:      document.getElementById('e_marginalia'),
+    date:      document.getElementById('e_date'),
+    read:      document.getElementById('e_read'),
+    author:    document.getElementById('e_author'),
+    imageUrl:  document.getElementById('e_imageUrl'),
+    imageFile: document.getElementById('e_imageFile'),
+    imageAlt:  document.getElementById('e_imageAlt'),
+    imageCap:  document.getElementById('e_imageCaption'),
+    featured:  document.getElementById('tog_featured'),
+    published: document.getElementById('tog_published')
+  };
+
+  // mutable image state: either URL string or data URL
+  let currentImage = '';
+
+  function openEditor(id) {
+    const essay = S.getEssay(id);
+    if (!essay) { toast('essay not found.'); return; }
+    currentEditingId = id;
+
+    E.num.value       = essay.number || '';
+    E.cat.value       = essay.category || '';
+    E.title.value     = essay.title || '';
+    E.titleHtml.value = essay.titleHtml || '';
+    E.dek.value       = essay.dek || '';
+    E.body.value      = essay.body || '';
+    E.marg.value      = essay.marginalia || '';
+    E.date.value      = essay.date || '';
+    E.read.value      = essay.readTime || '';
+    E.author.value    = essay.author || '';
+    E.imageAlt.value  = essay.imageAlt || '';
+    E.imageCap.value  = essay.imageCaption || '';
+    E.featured.classList.toggle('on',  !!essay.featured);
+    E.published.classList.toggle('on', !!essay.published);
+
+    currentImage = essay.image || '';
+    E.imageUrl.value = /^https?:\/\//i.test(currentImage) ? currentImage : '';
+    // If image is a data URL, switch to upload tab; otherwise URL tab
+    const initialTab = currentImage && !/^https?:\/\//i.test(currentImage) ? 'upload' : 'url';
+    switchImageTab(initialTab);
+    updateImagePreview();
+
+    // layout radios
+    const layout = essay.layout || 'standard';
+    document.querySelectorAll('input[name="layout"]').forEach(r => {
+      r.checked = (r.value === layout);
+    });
+    document.querySelectorAll('#layoutGrid .layout-option').forEach(opt => {
+      const input = opt.querySelector('input');
+      opt.classList.toggle('active', input && input.checked);
+    });
+
+    const featLayout = essay.featuredLayout || 'editorial';
+    document.querySelectorAll('input[name="featuredLayout"]').forEach(r => {
+      r.checked = (r.value === featLayout);
+    });
+    document.querySelectorAll('#featuredLayoutGrid .layout-option').forEach(opt => {
+      const input = opt.querySelector('input');
+      opt.classList.toggle('active', input && input.checked);
+    });
+    updateFeaturedCardVisibility();
+
+    document.getElementById('editorHeading').innerHTML =
+      essay.title && essay.title !== 'Untitled'
+        ? `Edit · <em>${escapeHtml(essay.title)}</em>`
+        : 'New essay';
+    document.getElementById('editorSub').textContent =
+      `№ ${essay.number} · ${essay.published ? 'published' : 'draft'}${essay.featured ? ' · featured' : ''}`;
+
+    renderCategoryChips();
+    renderPreview();
+    switchPanel('editor');
+  }
+
+  E.featured.addEventListener('click',  () => {
+    E.featured.classList.toggle('on');
+    updateFeaturedCardVisibility();
+    renderPreview();
+  });
+  E.published.addEventListener('click', () => {
+    E.published.classList.toggle('on');
+    renderPreview();
+  });
+
+  function updateFeaturedCardVisibility() {
+    document.getElementById('featuredLayoutCard').style.display =
+      E.featured.classList.contains('on') ? 'flex' : 'none';
+  }
+
+  /* ─── Layout selection ────────────────────────────── */
+  document.querySelectorAll('#layoutGrid .layout-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('#layoutGrid .layout-option').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      const input = opt.querySelector('input');
+      if (input) input.checked = true;
+      renderPreview();
+    });
+  });
+  document.querySelectorAll('#featuredLayoutGrid .layout-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('#featuredLayoutGrid .layout-option').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      const input = opt.querySelector('input');
+      if (input) input.checked = true;
+    });
+  });
+
+  /* ─── Category chips ──────────────────────────────── */
+  function renderCategoryChips() {
+    const cats = S.getCategories();
+    const chipsWrap = document.getElementById('catChips');
+    if (!chipsWrap) return;
+    const currentParts = E.cat.value.split('·').map(s => s.trim()).filter(Boolean);
+    chipsWrap.innerHTML = cats.map(c => {
+      const isActive = currentParts.some(p => p.toLowerCase() === c.name.toLowerCase());
+      return `<button type="button" class="cat-chip ${isActive ? 'active' : ''}"
+                      data-cat="${escapeAttr(c.name)}"
+                      style="${!isActive ? `border-color: ${escapeAttr(c.color)}; color: ${escapeAttr(c.color)};` : ''}">
+        <span class="dot" style="background: ${escapeAttr(c.color)}"></span>
+        ${escapeHtml(c.name)}
+      </button>`;
+    }).join('');
+  }
+  document.getElementById('catChips').addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-cat]');
+    if (!chip) return;
+    const name = chip.dataset.cat;
+    const parts = E.cat.value.split('·').map(s => s.trim()).filter(Boolean);
+    const idx = parts.findIndex(p => p.toLowerCase() === name.toLowerCase());
+    if (idx === -1) parts.push(name);
+    else parts.splice(idx, 1);
+    E.cat.value = parts.join(' · ');
+    renderCategoryChips();
+    renderPreview();
+  });
+  E.cat.addEventListener('input', renderCategoryChips);
+
+  /* ─── Image upload ────────────────────────────────── */
+  const imageTabs = document.getElementById('imageTabs');
+  imageTabs.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-tab]');
+    if (btn) switchImageTab(btn.dataset.tab);
+  });
+  function switchImageTab(name) {
+    imageTabs.querySelectorAll('button').forEach(b =>
+      b.classList.toggle('active', b.dataset.tab === name));
+    document.querySelectorAll('.image-panel').forEach(p =>
+      p.classList.toggle('active', p.dataset.tab === name));
+  }
+
+  E.imageUrl.addEventListener('input', () => {
+    currentImage = E.imageUrl.value.trim();
+    updateImagePreview();
+    renderPreview();
+  });
+
+  const dropZone = document.getElementById('dropZone');
+  dropZone.addEventListener('click', () => E.imageFile.click());
+  dropZone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') E.imageFile.click(); });
+  ['dragover','dragenter'].forEach(evt => dropZone.addEventListener(evt, (e) => {
+    e.preventDefault(); dropZone.classList.add('drag');
+  }));
+  ['dragleave','dragend','drop'].forEach(evt => dropZone.addEventListener(evt, () => {
+    dropZone.classList.remove('drag');
+  }));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleImageFile(file);
+  });
+  E.imageFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleImageFile(file);
+    e.target.value = '';
+  });
+
+  async function handleImageFile(file) {
+    if (!/^image\//.test(file.type)) { toast('not an image file.'); return; }
+    try {
+      const dataUrl = await S.readImageFile(file, { maxWidth: 1600, quality: 0.85 });
+      currentImage = dataUrl;
+      E.imageUrl.value = '';
+      updateImagePreview();
+      renderPreview();
+      renderStorage();
+      toast('image added.');
+    } catch (err) {
+      toast('could not read image.');
+    }
+  }
+
+  document.getElementById('ip_remove').addEventListener('click', () => {
+    currentImage = '';
+    E.imageUrl.value = '';
+    E.imageFile.value = '';
+    updateImagePreview();
+    renderPreview();
+  });
+
+  function updateImagePreview() {
+    const wrap = document.getElementById('imagePreview');
+    const img  = document.getElementById('e_imagePreviewImg');
+    if (!currentImage) { wrap.style.display = 'none'; img.src = ''; return; }
+    wrap.style.display = 'flex';
+    img.src = currentImage;
+
+    const isData = /^data:/.test(currentImage);
+    document.getElementById('ip_source').textContent = isData ? 'Uploaded · stored locally' : 'External URL';
+    const approxKb = isData ? Math.round(currentImage.length * 0.75 / 1024) : null;
+    document.getElementById('ip_size').textContent = approxKb != null
+      ? `~${approxKb >= 1024 ? (approxKb/1024).toFixed(1)+' mb' : approxKb+' kb'}`
+      : 'Not stored locally';
+    img.onload = () => {
+      document.getElementById('ip_dims').textContent = `${img.naturalWidth} × ${img.naturalHeight} px`;
+    };
+  }
+
+  /* ─── Editor collect / preview ────────────────────── */
+  function getSelectedLayout() {
+    const r = document.querySelector('input[name="layout"]:checked');
+    return r ? r.value : 'standard';
+  }
+  function getSelectedFeaturedLayout() {
+    const r = document.querySelector('input[name="featuredLayout"]:checked');
+    return r ? r.value : 'editorial';
+  }
+
+  function collectEssay() {
+    return {
+      id: currentEditingId,
+      number: (E.num.value || currentEditingId).trim(),
+      category: E.cat.value.trim(),
+      title: E.title.value.trim(),
+      titleHtml: E.titleHtml.value.trim(),
+      dek: E.dek.value.trim(),
+      body: E.body.value.trim(),
+      marginalia: E.marg.value.trim(),
+      author: E.author.value.trim(),
+      date: E.date.value,
+      readTime: E.read.value.trim(),
+      featured:  E.featured.classList.contains('on'),
+      published: E.published.classList.contains('on'),
+      image: currentImage,
+      imageAlt: E.imageAlt.value.trim(),
+      imageCaption: E.imageCap.value.trim(),
+      layout: getSelectedLayout(),
+      featuredLayout: getSelectedFeaturedLayout()
+    };
+  }
+
+  Object.values(E).forEach(el => {
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+      el.addEventListener('input', renderPreview);
+    }
+  });
+
+  function renderPreview() {
+    const e = collectEssay();
+    document.getElementById('pv_title').innerHTML = e.titleHtml || escapeHtml(e.title || '—');
+    document.getElementById('pv_dek').innerHTML   = e.dek || '—';
+    document.getElementById('pv_body').innerHTML  =
+      (e.body ? e.body.slice(0, 320) + (e.body.length > 320 ? '…' : '') : '—');
+    const pvImg = document.getElementById('pv_image');
+    if (e.image) { pvImg.style.display = 'block'; pvImg.src = e.image; }
+    else { pvImg.style.display = 'none'; pvImg.src = ''; }
+  }
+
+  document.getElementById('editorBack').addEventListener('click', () => switchPanel('essays'));
+
+  function safeSaveEssay(essay, successMsg) {
+    try {
+      S.saveEssay(essay);
+      renderStats();
+      renderEssayList();
+      renderStorage();
+      toast(successMsg);
+    } catch (err) {
+      if (err && String(err).toLowerCase().includes('quota')) {
+        toast('storage full. try a smaller image or an external URL.');
+      } else {
+        toast('could not save.');
+        console.error(err);
+      }
+    }
+  }
+
+  document.getElementById('editorSave').addEventListener('click', () => {
+    const e = collectEssay();
+    e.published = false;
+    E.published.classList.remove('on');
+    safeSaveEssay(e, 'draft saved.');
+  });
+
+  document.getElementById('editorPublish').addEventListener('click', () => {
+    const e = collectEssay();
+    e.published = true;
+    E.published.classList.add('on');
+    safeSaveEssay(e, 'published.');
+  });
+
+  document.getElementById('editorDelete').addEventListener('click', () => {
+    if (!currentEditingId) return;
+    confirmModal('Delete this essay?', 'This cannot be undone.', () => {
+      S.deleteEssay(currentEditingId);
+      currentEditingId = null;
+      renderStats();
+      renderEssayList();
+      renderStorage();
+      switchPanel('essays');
+      toast('essay removed.');
+    });
+  });
+
+  /* ─── Categories panel ────────────────────────────── */
+  const catList = document.getElementById('catList');
+  function renderCategoriesPanel() {
+    const cats = S.getCategories();
+    if (!cats.length) {
+      catList.innerHTML = `<div class="empty">No categories yet. Add your first above.</div>`;
+      return;
+    }
+    catList.innerHTML = cats.map(c => {
+      const count = S.countCategoryUsage(c.name);
+      return `
+        <div class="cat-row" data-cat="${escapeAttr(c.id)}">
+          <div class="cat-swatch" style="background:${escapeAttr(c.color)}"></div>
+          <div>
+            <div class="c-name">${escapeHtml(c.name)}</div>
+            <div class="c-slug">${escapeHtml(c.id)}</div>
+          </div>
+          <div class="c-count"><strong>${count}</strong>essays</div>
+          <div class="c-actions">
+            <button class="btn small" data-cat-edit="${escapeAttr(c.id)}">Edit</button>
+          </div>
+          <div class="c-actions">
+            <button class="btn ghost small" data-cat-del="${escapeAttr(c.id)}">Delete</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  catList.addEventListener('click', (e) => {
+    const editBtn = e.target.closest('[data-cat-edit]');
+    if (editBtn) { startCategoryEdit(editBtn.dataset.catEdit); return; }
+    const delBtn = e.target.closest('[data-cat-del]');
+    if (delBtn) {
+      const id = delBtn.dataset.catDel;
+      const cat = S.getCategory(id);
+      if (!cat) return;
+      const usage = S.countCategoryUsage(cat.name);
+      const msg = usage > 0
+        ? `${usage} essay${usage === 1 ? '' : 's'} still use this category. Deleting does not remove them; the text just won't match a catalog color anymore.`
+        : 'This cannot be undone.';
+      confirmModal(`Delete "${cat.name}"?`, msg, () => {
+        S.deleteCategory(id);
+        renderAll();
+        toast('category removed.');
+      });
+    }
+  });
+
+  function startCategoryEdit(id) {
+    const row = catList.querySelector(`[data-cat="${cssEscape(id)}"]`);
+    const cat = S.getCategory(id);
+    if (!row || !cat) return;
+    row.innerHTML = `
+      <input type="color" value="${escapeAttr(cat.color)}" class="ce-color">
+      <div class="c-editing">
+        <input type="text" value="${escapeAttr(cat.name)}" class="ce-name" placeholder="Name">
+      </div>
+      <div></div>
+      <div class="c-actions">
+        <button class="btn small ce-save">Save</button>
+        <button class="btn ghost small ce-cancel">Cancel</button>
+      </div>
+      <div></div>`;
+    row.querySelector('.ce-save').addEventListener('click', () => {
+      const name  = row.querySelector('.ce-name').value.trim();
+      const color = row.querySelector('.ce-color').value;
+      if (!name) { toast('name is required.'); return; }
+      S.saveCategory({ id: cat.id, name, color });
+      renderAll();
+      toast('category updated.');
+    });
+    row.querySelector('.ce-cancel').addEventListener('click', renderCategoriesPanel);
+    row.querySelector('.ce-name').focus();
+  }
+
+  document.getElementById('addCatBtn').addEventListener('click', () => {
+    const name  = document.getElementById('newCatName').value.trim();
+    const color = document.getElementById('newCatColor').value;
+    if (!name) { toast('name is required.'); return; }
+    S.saveCategory({ name, color });
+    document.getElementById('newCatName').value = '';
+    renderAll();
+    toast('category added.');
+  });
+  document.getElementById('newCatName').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('addCatBtn').click();
+  });
+
+  /* ─── Listening room ──────────────────────────────── */
+  function renderListeningPanel() {
+    const st = S.getSettings();
+    document.getElementById('s_spotify').value = st.spotifyUri || '';
+    document.getElementById('s_label').value   = st.spotifyLabel || '';
+    updateSpotifyPreview();
+  }
+  document.getElementById('s_spotify').addEventListener('input', updateSpotifyPreview);
+  function updateSpotifyPreview() {
+    const url = S.spotifyUriToEmbed(document.getElementById('s_spotify').value);
+    const wrap = document.getElementById('spotifyPreview');
+    const frame = document.getElementById('spotifyPreviewFrame');
+    if (url) { wrap.style.display = 'block'; if (frame.src !== url) frame.src = url; }
+    else { wrap.style.display = 'none'; frame.src = ''; }
+  }
+  document.getElementById('saveSpotify').addEventListener('click', () => {
+    S.updateSettings({
+      spotifyUri:   document.getElementById('s_spotify').value.trim(),
+      spotifyLabel: document.getElementById('s_label').value.trim() || 'A quiet room'
+    });
+    toast('listening room saved.');
+  });
+
+  /* ─── Masthead ────────────────────────────────────── */
+  function renderMastheadPanel() {
+    const st = S.getSettings();
+    document.getElementById('m_issue').value    = st.masthead.issue;
+    document.getElementById('m_season').value   = st.masthead.season;
+    document.getElementById('m_english').value  = st.masthead.english;
+    document.getElementById('m_ktitle').value   = st.masthead.koreanTitle;
+    document.getElementById('m_korean').value   = st.masthead.korean;
+    document.getElementById('m_city').value     = st.atmosphereCity;
+    document.getElementById('m_temp').value     = st.atmosphereTemp;
+    document.getElementById('m_epLines').value  = (st.epigraph.lines || []).join('\n');
+    document.getElementById('m_epSource').value = st.epigraph.source;
+    document.getElementById('m_pqLines').value  = (st.pullQuote.lines || []).join('\n');
+    document.getElementById('m_pqSource').value = st.pullQuote.source;
+  }
+  document.getElementById('saveMasthead').addEventListener('click', () => {
+    S.updateSettings({
+      masthead: {
+        issue: document.getElementById('m_issue').value,
+        season: document.getElementById('m_season').value,
+        archiveNote: S.getSettings().masthead.archiveNote,
+        english: document.getElementById('m_english').value,
+        koreanTitle: document.getElementById('m_ktitle').value,
+        korean: document.getElementById('m_korean').value
+      },
+      atmosphereCity: document.getElementById('m_city').value,
+      atmosphereTemp: document.getElementById('m_temp').value,
+      epigraph: {
+        lines: document.getElementById('m_epLines').value.split('\n').map(s => s.trim()).filter(Boolean),
+        source: document.getElementById('m_epSource').value
+      },
+      pullQuote: {
+        lines: document.getElementById('m_pqLines').value.split('\n').map(s => s.trim()).filter(Boolean),
+        source: document.getElementById('m_pqSource').value
+      }
+    });
+    toast('masthead saved.');
+  });
+
+  /* ─── Notes ──────────────────────────────────────── */
+  const notesEditor = document.getElementById('notesEditor');
+  function renderNotesPanel() {
+    const notes = S.getSettings().notes || [];
+    if (!notes.length) {
+      notesEditor.innerHTML = `<div class="empty">No notes yet.</div>`;
+      return;
+    }
+    notesEditor.innerHTML = notes.map((n, i) => `
+      <div class="settings-section" data-note="${i}">
+        <div class="two-col" style="gap: 16px;">
+          <div class="field">
+            <label>Date · dateline</label>
+            <input type="text" class="n-date" value="${escapeAttr(n.date || '')}">
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <button class="btn danger small" data-rm="${i}">Remove</button>
+          </div>
+        </div>
+        <div class="field" style="margin-top: 12px;">
+          <label>Body</label>
+          <textarea class="n-body" rows="4">${escapeHtml(n.body || '')}</textarea>
+        </div>
+      </div>`).join('');
+  }
+  document.getElementById('addNote').addEventListener('click', () => {
+    const st = S.getSettings();
+    const notes = (st.notes || []).slice();
+    const d = new Date();
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    notes.unshift({ date: `${d.getDate()} ${months[d.getMonth()]}`, body: '' });
+    S.updateNotes(notes);
+    renderNotesPanel();
+  });
+  notesEditor.addEventListener('click', (e) => {
+    const rm = e.target.closest('[data-rm]');
+    if (rm) {
+      const i = parseInt(rm.dataset.rm, 10);
+      const notes = (S.getSettings().notes || []).slice();
+      notes.splice(i, 1);
+      S.updateNotes(notes);
+      renderNotesPanel();
+    }
+  });
+  document.getElementById('saveNotes').addEventListener('click', () => {
+    const sections = notesEditor.querySelectorAll('.settings-section');
+    const notes = Array.from(sections).map(s => ({
+      date: s.querySelector('.n-date').value,
+      body: s.querySelector('.n-body').value
+    })).filter(n => n.date || n.body);
+    S.updateNotes(notes);
+    toast('notes saved.');
+  });
+
+  /* ─── Account ─────────────────────────────────────── */
+  function renderStorage() {
+    const u = S.storageUsage();
+    const fill = document.getElementById('storageFill');
+    fill.style.width = u.percent + '%';
+    fill.classList.toggle('warn',   u.percent >= 60 && u.percent < 85);
+    fill.classList.toggle('danger', u.percent >= 85);
+    document.getElementById('storageNum').textContent = `${u.mb} / 5 mb`;
+    const note = document.getElementById('storageNote');
+    if (u.percent < 40)      note.textContent = 'Room for many essays.';
+    else if (u.percent < 70) note.textContent = 'Getting full. Prefer URLs for large images.';
+    else if (u.percent < 90) note.textContent = 'Almost full. Export a backup soon.';
+    else                     note.textContent = 'Nearly out. New uploads may fail.';
+  }
+
+  document.getElementById('savePw').addEventListener('click', () => {
+    const oldPw = document.getElementById('pw_old').value;
+    const newPw = document.getElementById('pw_new').value;
+    if (!S.checkPassword(oldPw)) { toast('current passphrase is wrong.'); return; }
+    if (newPw.length < 4) { toast('at least four characters.'); return; }
+    S.setPassword(newPw);
+    document.getElementById('pw_old').value = '';
+    document.getElementById('pw_new').value = '';
+    toast('passphrase updated.');
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const data = S.loadData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `unplugged-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('backup exported.');
+  });
+
+  document.getElementById('importFile').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data.essays || !Array.isArray(data.essays)) throw new Error('bad file');
+      S.saveData(data);
+      renderAll();
+      toast('backup imported.');
+    } catch (err) {
+      toast('could not read that file.');
+    }
+    e.target.value = '';
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    confirmModal(
+      'Reset everything to defaults?',
+      'Your essays and settings will be replaced by the built-in ones. This cannot be undone.',
+      () => {
+        S.resetAll();
+        renderAll();
+        toast('reset to defaults.');
+      }
+    );
+  });
+
+  /* ─── Atmosphere line on sidebar ──────────────────── */
+  const adminAtmo = document.getElementById('adminAtmosphere');
+  const moods = ['still', 'thinking', 'listening', 'unhurried', 'windowed', 'lit gently'];
+  function updateAtmosphere() {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    const mood = moods[(d.getMinutes() + d.getHours()) % moods.length];
+    const city = (S.getSettings().atmosphereCity || 'seoul').toLowerCase();
+    adminAtmo.textContent = `${hh}:${mm} · ${city} · ${mood}`;
+  }
+  updateAtmosphere();
+  setInterval(updateAtmosphere, 15000);
+
+  /* ─── Toast ───────────────────────────────────────── */
+  const toastEl = document.getElementById('toast');
+  let toastTimer;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+  }
+
+  /* ─── Confirm modal ───────────────────────────────── */
+  const modal = document.getElementById('modal');
+  let confirmAction = null;
+  function confirmModal(title, body, action) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').textContent  = body;
+    confirmAction = action;
+    modal.classList.add('show');
+  }
+  document.getElementById('modalCancel').addEventListener('click', () => {
+    modal.classList.remove('show'); confirmAction = null;
+  });
+  document.getElementById('modalConfirm').addEventListener('click', () => {
+    if (confirmAction) confirmAction();
+    modal.classList.remove('show'); confirmAction = null;
+  });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) { modal.classList.remove('show'); confirmAction = null; }
+  });
+
+  /* ─── Utilities ───────────────────────────────────── */
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+  function escapeAttr(s) { return escapeHtml(s); }
+  function escapeCss(s) {
+    if (s == null) return '';
+    return String(s).replace(/'/g, "\\'").replace(/\n/g, '');
+  }
+  function cssEscape(s) {
+    if (window.CSS && CSS.escape) return CSS.escape(s);
+    return String(s).replace(/[^\w-]/g, '\\$&');
+  }
+
+})();
+</script>
+
+</body>
+</html>
