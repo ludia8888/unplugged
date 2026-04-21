@@ -169,6 +169,13 @@
   .cursor-ring { width: 36px; height: 36px; border: 1px solid var(--ink-muted); border-radius: 50%; opacity: .4; transition: width .4s var(--ease), height .4s var(--ease), opacity .3s; }
   body.is-hovering .cursor-dot { width: 4px; height: 4px; }
   body.is-hovering .cursor-ring { width: 72px; height: 72px; opacity: .75; border-color: var(--ink); }
+
+  :root[data-theme="dark"] .cursor-dot,
+  :root[data-theme="dark"] .cursor-ring { mix-blend-mode: normal; }
+  :root[data-theme="dark"] .cursor-dot  { background: var(--frost); opacity: .95; }
+  :root[data-theme="dark"] .cursor-ring { border-color: var(--frost); opacity: .75; }
+  :root[data-theme="dark"] body.is-hovering .cursor-ring { border-color: var(--frost); opacity: 1; }
+
   @media (pointer: coarse) { body { cursor: auto; } .cursor-dot, .cursor-ring { display: none; } a, button, input { cursor: auto; } }
 
   .shell { max-width: 1280px; margin: 0 auto; padding: 0 var(--pad-x); position: relative; z-index: 1; }
