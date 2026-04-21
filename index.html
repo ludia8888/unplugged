@@ -894,10 +894,97 @@
     padding-bottom: clamp(56px, 9vh, 120px);
     border-bottom: 1px solid var(--hairline);
   }
+  /* ─── Archive controls ───────────────────────────── */
+  .archive-controls {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    padding: 0 0 clamp(18px, 2.5vh, 28px);
+    flex-wrap: wrap;
+  }
+  .archive-controls .control-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .sort-chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 2px;
+    background: color-mix(in oklab, var(--paper-warm) 60%, transparent);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 100px;
+  }
+  .sort-chip {
+    background: transparent;
+    border: 0;
+    padding: 7px 16px;
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    cursor: none;
+    transition: color .3s var(--ease), background .3s var(--ease);
+  }
+  .sort-chip:hover { color: var(--ink); }
+  .sort-chip.is-active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* ─── Archive year groups ────────────────────────── */
+  .archive-year + .archive-year { margin-top: clamp(36px, 5vh, 64px); }
+  .year-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: 24px;
+    padding: 0 0 14px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .year-label {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: clamp(36px, 4.6vw, 64px);
+    line-height: 1;
+    letter-spacing: -.025em;
+    color: var(--ink);
+    font-feature-settings: 'onum';
+  }
+  .year-head::after {
+    content: '';
+    height: 1px;
+    background: var(--hairline-soft);
+    align-self: center;
+    width: 100%;
+    display: none;
+  }
+  .year-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .year-count em {
+    font-family: var(--italic);
+    font-style: italic;
+    color: var(--ink);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
   .archive-table {
     width: 100%;
     border-top: 1px solid var(--hairline);
   }
+  .archive-year .archive-table { border-top: 0; }
   .archive-row {
     display: grid;
     grid-template-columns: 110px 140px 1fr 80px 90px;
@@ -940,7 +1027,19 @@
     font-family: var(--italic);
     font-style: italic;
   }
-  .archive-row .a-read { text-align: right; }
+  .archive-row .a-read {
+    text-align: right;
+    display: inline-flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .archive-row .a-hearts {
+    font-style: normal;
+    color: var(--sienna);
+    letter-spacing: .14em;
+    font-variant-numeric: tabular-nums;
+  }
   .archive-row .a-num  { text-align: right; }
 
   .archive-foot {
@@ -1447,6 +1546,12 @@
     .archive-row .a-cat,
     .archive-row .a-num { display: none; }
     .archive-row:hover { padding-left: 4px; }
+
+    .archive-controls { gap: 12px; padding-bottom: 14px; }
+    .sort-chip { padding: 6px 12px; font-size: 9px; letter-spacing: .18em; }
+    .year-head { grid-template-columns: auto 1fr; gap: 14px; padding-bottom: 10px; }
+    .year-head .year-count { grid-column: 1 / -1; text-align: left; margin-top: -4px; }
+    .year-label { font-size: clamp(32px, 10vw, 44px); }
 
     .notes-grid { grid-template-columns: 1fr 1fr; }
     .note { padding: 26px 18px 26px 0; }
@@ -1978,10 +2083,21 @@
     </div>
     <div class="section-label" id="archiveHeadMeta">—</div>
   </div>
-  <div class="archive-table reveal" id="archiveTable"></div>
+
+  <div class="archive-controls reveal">
+    <span class="control-label">Sort by</span>
+    <div class="sort-chips" role="tablist" aria-label="Sort archive">
+      <button class="sort-chip is-active" data-sort="latest"    role="tab" aria-selected="true">Latest</button>
+      <button class="sort-chip"           data-sort="oldest"    role="tab">Oldest</button>
+      <button class="sort-chip"           data-sort="deliberate" role="tab">Deliberate</button>
+      <button class="sort-chip"           data-sort="held"      role="tab">Most held</button>
+    </div>
+  </div>
+
+  <div class="archive-groups reveal" id="archiveGroups"></div>
+
   <div class="archive-foot">
     <span id="archiveCount">—</span>
-    <a data-hover href="#">Open the full archive  →</a>
   </div>
 </section>
 
@@ -2276,22 +2392,102 @@
     </blockquote>
     <cite>— ${escapeOrKeep(pq.source)}</cite>`;
 
-  /* ─── Archive ─────────────────────────────────────── */
+  /* ─── Archive (sorted, grouped by year) ────────────── */
   const archiveAll = S.getPublishedEssays();
-  const archiveShown = archiveAll.slice(0, 9);
-  document.getElementById('archiveHeadMeta').textContent =
-    `${archiveAll.length} essay${archiveAll.length === 1 ? '' : 's'} · since 2024`;
-  document.getElementById('archiveCount').textContent =
-    `Showing ${archiveShown.length} of ${archiveAll.length}`;
+  let likesMap = {};  // populated asynchronously; re-render when it arrives
+  let currentSort = 'latest';
+  const yearSpan = (() => {
+    const years = archiveAll.map(e => (e.date || '').slice(0, 4)).filter(Boolean).sort();
+    const from = years[0] || '';
+    return from;
+  })();
 
-  document.getElementById('archiveTable').innerHTML = archiveShown.map(e => `
-    <a class="archive-row" data-hover href="article.html?id=${encodeURIComponent(e.id)}">
-      <span class="a-date">${S.formatDate(e.date)}</span>
-      <span class="a-cat">${renderCategoryInline(e.category)}</span>
-      <span class="a-title">${e.titleHtml || escapeHtml(e.title)}</span>
-      <span class="a-read">${escapeHtml(e.readTime || '')}</span>
-      <span class="a-num">№ ${escapeHtml(e.number)}</span>
-    </a>`).join('');
+  document.getElementById('archiveHeadMeta').textContent = yearSpan
+    ? `${archiveAll.length} essay${archiveAll.length === 1 ? '' : 's'} · since ${yearSpan}`
+    : `${archiveAll.length} essay${archiveAll.length === 1 ? '' : 's'}`;
+  document.getElementById('archiveCount').textContent = `${archiveAll.length} in the catalog`;
+
+  function parseReadMinutes(s) {
+    const m = String(s || '').match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : 0;
+  }
+
+  function sortEssays(list, mode) {
+    const copy = list.slice();
+    if (mode === 'oldest') {
+      return copy.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    }
+    if (mode === 'deliberate') {
+      return copy.sort((a, b) => parseReadMinutes(b.readTime) - parseReadMinutes(a.readTime)
+        || (b.date || '').localeCompare(a.date || ''));
+    }
+    if (mode === 'held') {
+      return copy.sort((a, b) => ((likesMap[b.id] || 0) - (likesMap[a.id] || 0))
+        || (b.date || '').localeCompare(a.date || ''));
+    }
+    // latest — the list is already desc by date
+    return copy;
+  }
+
+  function groupByYear(list) {
+    const out = [];
+    for (const e of list) {
+      const y = (e.date || '').slice(0, 4) || '—';
+      const last = out[out.length - 1];
+      if (last && last.year === y) last.essays.push(e);
+      else out.push({ year: y, essays: [e] });
+    }
+    return out;
+  }
+
+  function renderArchiveRow(e) {
+    const hearts = likesMap[e.id] || 0;
+    const heartsHtml = hearts > 0
+      ? ` · <i class="a-hearts" data-heart-id="${escapeAttr(e.id)}">♡ ${hearts}</i>`
+      : '';
+    return `
+      <a class="archive-row" data-hover href="article.html?id=${encodeURIComponent(e.id)}">
+        <span class="a-date">${S.formatDate(e.date)}</span>
+        <span class="a-cat">${renderCategoryInline(e.category)}</span>
+        <span class="a-title">${e.titleHtml || escapeHtml(e.title)}</span>
+        <span class="a-read">${escapeHtml(e.readTime || '')}${heartsHtml}</span>
+        <span class="a-num">№ ${escapeHtml(e.number)}</span>
+      </a>`;
+  }
+
+  function renderArchive() {
+    const sorted = sortEssays(archiveAll, currentSort);
+    const groupedMode = currentSort === 'latest' || currentSort === 'oldest';
+    const groups = groupedMode ? groupByYear(sorted) : [{ year: null, essays: sorted }];
+
+    const html = groups.map(g => {
+      const header = g.year ? `
+        <div class="year-head">
+          <div class="year-label">${g.year}</div>
+          <div class="year-count"><em>${g.essays.length}</em> essay${g.essays.length === 1 ? '' : 's'}</div>
+        </div>` : '';
+      const rows = g.essays.map(renderArchiveRow).join('');
+      return `<div class="archive-year">${header}<div class="archive-table">${rows}</div></div>`;
+    }).join('');
+
+    document.getElementById('archiveGroups').innerHTML = html;
+  }
+
+  renderArchive();
+
+  document.querySelectorAll('.sort-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      if (chip.classList.contains('is-active')) return;
+      document.querySelectorAll('.sort-chip').forEach(c => {
+        c.classList.remove('is-active');
+        c.setAttribute('aria-selected', 'false');
+      });
+      chip.classList.add('is-active');
+      chip.setAttribute('aria-selected', 'true');
+      currentSort = chip.dataset.sort;
+      renderArchive();
+    });
+  });
 
   /* ─── Notes ───────────────────────────────────────── */
   document.getElementById('notesGrid').innerHTML = (settings.notes || []).map(n => `
@@ -2300,20 +2496,24 @@
       <p class="note-body">${n.body}</p>
     </div>`).join('');
 
-  /* ─── Quiet heart counts on cards ─────────────────── */
+  /* ─── Fetch like counts for every essay, then hydrate ─ */
   (function fetchHeartCounts() {
-    const ids = Array.from(document.querySelectorAll('.hearts[data-heart-id]'))
-      .map(el => el.dataset.heartId);
-    if (!ids.length || !S.api || !S.api.likes) return;
-    const unique = Array.from(new Set(ids));
-    S.api.likes.get(unique).then(res => {
-      const counts = res.counts || (typeof res.count === 'number' ? { [unique[0]]: res.count } : {});
+    if (!S.api || !S.api.likes) return;
+    // Ask for all published essays — archive + cards + featured — in one batch
+    const ids = Array.from(new Set(S.getPublishedEssays().map(e => e.id)));
+    if (!ids.length) return;
+    S.api.likes.get(ids).then(res => {
+      const counts = res.counts || (typeof res.count === 'number' ? { [ids[0]]: res.count } : {});
+      likesMap = counts;
+      // Update the card .hearts spans in place
       Object.entries(counts).forEach(([id, n]) => {
         if (!n) return;
         document.querySelectorAll(`.hearts[data-heart-id="${CSS.escape(id)}"]`).forEach(el => {
           el.textContent = `♡ ${n}`;
         });
       });
+      // Re-render archive so the Most-held sort and inline hearts reflect real data
+      renderArchive();
     }).catch(() => { /* silent fail — KV not configured is fine */ });
   })();
 
