@@ -1383,6 +1383,56 @@
     .response-like { grid-template-columns: 1fr; gap: 14px; }
   }
 
+  /* ─── Typewriter stream ─────────────────────────────── */
+  /* A small sienna bar flashes at the end of whichever element is
+     currently receiving characters. Like an editor's cursor, but
+     in ink. Inherits text-layout so it sits on the baseline properly. */
+  .is-streaming::after {
+    content: '';
+    display: inline-block;
+    width: 2px;
+    height: 1.05em;
+    margin-left: 0.12em;
+    vertical-align: text-bottom;
+    background: var(--sienna);
+    opacity: .7;
+    border-radius: 1px;
+    animation: cursor-blink .88s steps(2, start) infinite;
+    transform: translateY(-0.05em);
+  }
+  @keyframes cursor-blink { to { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .is-streaming::after { display: none; }
+  }
+
+  /* A quiet floating pill that appears a few seconds into the stream
+     and whispers that a click will skip. Disappears when stream ends. */
+  .skip-hint {
+    position: fixed;
+    bottom: clamp(16px, 3vh, 32px);
+    left: 50%;
+    transform: translateX(-50%) translateY(14px);
+    padding: 8px 16px;
+    background: color-mix(in oklab, var(--paper) 92%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--hairline);
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .5s var(--ease), transform .5s var(--ease-slow);
+    z-index: 90;
+  }
+  .skip-hint.is-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
   /* ─── Reveal ─────────────────────────────────────────── */
   .reveal {
     opacity: 0;
@@ -1653,8 +1703,19 @@
 
     root.innerHTML = head + hero + body + response + end + colophon;
 
+    // Make the head and body-wrap immediately visible so stream has a
+    // canvas (they normally fade in via .reveal / IntersectionObserver).
+    root.querySelectorAll('.article-head, .article-body-wrap').forEach(el => el.classList.add('in'));
+
     // Community (likes + comments)
     initResponse(e.id);
+
+    // Stream the title, dek, and body like a Claude reply — with skip.
+    streamArticle([
+      root.querySelector('.article-title'),
+      root.querySelector('.article-dek'),
+      root.querySelector('.article-body'),
+    ]);
 
     // Reveal on scroll
     const io = new IntersectionObserver((entries) => {
@@ -1704,6 +1765,138 @@
     return `<div class="article-body">${sectionHtmlArr.join('')}</div>`
       + (marginalia ? `<aside class="article-marginalia">${marginalia}</aside>` : '');
   }
+
+  /* ─── Typewriter stream (article text unspools on arrival) ─ */
+  function prefersReducedMotion() {
+    return window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  async function streamArticle(targets) {
+    if (prefersReducedMotion()) return;   // nothing to animate
+    targets = targets.filter(Boolean);
+    if (!targets.length) return;
+
+    // Snapshot the already-rendered HTML, then empty the elements so
+    // we can re-append their contents character by character.
+    const originals = targets.map(el => el.innerHTML);
+    targets.forEach((el, i) => {
+      el.innerHTML = '';
+      el._originalHtml = originals[i];
+    });
+
+    let skipped = false;
+    const onSkip = (ev) => {
+      // Don't capture clicks on links / buttons / the listener pill —
+      // those are real navigations.
+      if (ev && ev.target && ev.target.closest('a, button, input, textarea')) return;
+      skipped = true;
+    };
+    const onKey = (ev) => {
+      if (ev.key === 'Escape' || ev.key === 'Enter' || ev.key === ' ') {
+        if (ev.target.matches && ev.target.matches('input, textarea')) return;
+        skipped = true;
+        ev.preventDefault();
+      }
+    };
+    root.addEventListener('click', onSkip);
+    window.addEventListener('keydown', onKey);
+
+    // Show a subtle "click to finish" hint after a short delay, but only
+    // if the stream is still running.
+    const hint = document.createElement('div');
+    hint.className = 'skip-hint';
+    hint.textContent = 'click to finish  ·  or press space';
+    document.body.appendChild(hint);
+    const hintTimer = setTimeout(() => {
+      if (!skipped) hint.classList.add('is-visible');
+    }, 2400);
+
+    // A short held breath before the first character — Claude-style pause.
+    await sleep(380);
+
+    for (let i = 0; i < targets.length; i++) {
+      const el = targets[i];
+      if (skipped) {
+        el.innerHTML = el._originalHtml;
+        continue;
+      }
+      await streamHtmlInto(el, el._originalHtml, () => skipped, i);
+    }
+
+    clearTimeout(hintTimer);
+    hint.classList.remove('is-visible');
+    setTimeout(() => hint.remove(), 600);
+    root.removeEventListener('click', onSkip);
+    window.removeEventListener('keydown', onKey);
+  }
+
+  async function streamHtmlInto(target, html, isSkipped, targetIndex) {
+    // Pace differs per section so the reader feels a heartbeat —
+    // title slower, dek medium, body quicker but still visible.
+    const pace = targetIndex === 0 ? 1.45       // title  — slower, deliberate
+              : targetIndex === 1 ? 1.15       // dek    — medium
+              :                     1.00;      // body   — quicker
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    try {
+      await cloneWithStream(tpl.content, target, isSkipped, pace);
+    } finally {
+      // If cancelled mid-stream, drop in the rest of the source so the
+      // reader doesn't land on a half-paragraph.
+      if (isSkipped() && target.innerHTML !== html) target.innerHTML = html;
+      document.querySelectorAll('.is-streaming').forEach(el => el.classList.remove('is-streaming'));
+    }
+  }
+
+  async function cloneWithStream(srcParent, tgtParent, isSkipped, pace) {
+    const nodes = Array.from(srcParent.childNodes);
+    for (const node of nodes) {
+      if (isSkipped()) {
+        tgtParent.appendChild(node.cloneNode(true));
+        continue;
+      }
+      if (node.nodeType === Node.TEXT_NODE) {
+        await streamText(node.data, tgtParent, isSkipped, pace);
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const shallow = node.cloneNode(false);  // attrs only, empty
+        tgtParent.appendChild(shallow);
+        await cloneWithStream(node, shallow, isSkipped, pace);
+      }
+    }
+  }
+
+  async function streamText(text, parent, isSkipped, pace) {
+    // Pure whitespace (newlines between tags, etc.) appears instantly.
+    if (!text.trim()) {
+      parent.appendChild(document.createTextNode(text));
+      return;
+    }
+    // Move the "streaming" cursor marker onto this parent. Remove it
+    // from any previously-active element so the cursor follows the pen.
+    document.querySelectorAll('.is-streaming').forEach(el => el.classList.remove('is-streaming'));
+    parent.classList.add('is-streaming');
+
+    const textNode = document.createTextNode('');
+    parent.appendChild(textNode);
+    for (let i = 0; i < text.length; i++) {
+      if (isSkipped()) { textNode.data = text; break; }
+      const ch = text[i];
+      textNode.data += ch;
+      await charDelay(ch, pace);
+    }
+  }
+
+  function charDelay(ch, pace) {
+    const base = (10 + Math.random() * 8) * pace;
+    let extra = 0;
+    if ('.!?'.includes(ch))              extra = 140;
+    else if (',;:'.includes(ch))         extra = 48;
+    else if (ch === '—' || ch === '–')   extra = 65;
+    else if (ch === '"' || ch === '\u201C' || ch === '\u201D') extra = 35;
+    return new Promise(r => setTimeout(r, base + extra));
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
   /* ─── Response: likes + comments ──────────────────── */
   function initResponse(essayId) {
