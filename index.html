@@ -4,6 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#efe8d6">
+<script>
+  // FOUC-free theme init — runs before CSS parses
+  (function () {
+    try {
+      var stored = localStorage.getItem('unplugged:theme');
+      var t = (stored === 'light' || stored === 'dark')
+        ? stored
+        : (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute('content', t === 'dark' ? '#161412' : '#efe8d6');
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  })();
+</script>
 <title>Unplugged — Essays on thought, technology, and what remains</title>
 <meta name="description" content="A slow journal of essays on humanities, building, art, and history. Edited with care. Read with time.">
 
@@ -36,6 +52,48 @@
     --ease-slow: cubic-bezier(.16,.84,.24,1);
 
     --pad-x: clamp(20px, 5vw, 88px);
+
+    --grain-opacity:   0.18;
+    --grain-blend:     multiply;
+    --breath-warm:     rgba(248, 231, 188, .38);
+    --breath-cool:     rgba(58, 80, 96, .12);
+    --residue-glow:    rgba(164, 64, 26, .18);
+    --cover-shadow-a:  rgba(20, 16, 10, .15);
+    --cover-shadow-b:  rgba(20, 16, 10, .35);
+    --cover-shadow-c:  rgba(20, 16, 10, .78);
+    --spine-shadow:    rgba(20, 16, 10, .22);
+    --pill-shadow:     rgba(20, 16, 10, .35);
+    --pill-shadow-big: rgba(20, 16, 10, .4);
+  }
+
+  /* ─── Evening edition (dark theme) ───────────────────── */
+  :root[data-theme="dark"] {
+    --paper:        #161412;
+    --paper-warm:   #1e1a15;
+    --paper-shade:  #252017;
+    --ink:          #f0e4cc;
+    --ink-soft:     #d9cdb0;
+    --ink-muted:    #8a7f66;
+    --ink-faint:    #5a5342;
+    --hairline:     #3d3728;
+    --hairline-soft:#2a2419;
+    --sienna:       #e08856;
+    --persimmon:    #e8a066;
+    --winter:       #6a859c;
+    --gold:         #e4b884;
+    --frost:        #f5ebd4;
+
+    --grain-opacity:   0.10;
+    --grain-blend:     screen;
+    --breath-warm:     rgba(228, 184, 132, .10);
+    --breath-cool:     rgba(106, 133, 156, .10);
+    --residue-glow:    rgba(224, 136, 86, .22);
+    --cover-shadow-a:  rgba(0, 0, 0, .30);
+    --cover-shadow-b:  rgba(0, 0, 0, .55);
+    --cover-shadow-c:  rgba(0, 0, 0, .88);
+    --spine-shadow:    rgba(0, 0, 0, .55);
+    --pill-shadow:     rgba(0, 0, 0, .55);
+    --pill-shadow-big: rgba(0, 0, 0, .65);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -65,9 +123,13 @@
     inset: 0;
     pointer-events: none;
     z-index: 9999;
-    opacity: 0.18;
-    mix-blend-mode: multiply;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: var(--grain-blend);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.06 0 0 0 0 0.04 0 0 0 .7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  :root[data-theme="dark"] body::before {
+    /* Lighter noise on dark paper — warm paper fibres catching lamp light */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.94 0 0 0 0 0.88 0 0 0 0 0.78 0 0 0 .7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   /* ─── Breathing light ─────────────────────────────────── */
@@ -79,11 +141,11 @@
     z-index: 0;
     background:
       radial-gradient(ellipse 80% 60% at 70% 10%,
-        rgba(248, 231, 188, .38) 0%,
-        rgba(248, 231, 188, 0) 55%),
+        var(--breath-warm) 0%,
+        transparent 55%),
       radial-gradient(ellipse 60% 50% at 15% 90%,
-        rgba(58, 80, 96, .12) 0%,
-        rgba(58, 80, 96, 0) 60%);
+        var(--breath-cool) 0%,
+        transparent 60%);
     animation: breathe 14s ease-in-out infinite;
   }
   @keyframes breathe {
@@ -707,9 +769,9 @@
     inset: 0;
     background: linear-gradient(
       180deg,
-      rgba(20, 16, 10, .15) 0%,
-      rgba(20, 16, 10, .35) 50%,
-      rgba(20, 16, 10, .78) 100%
+      var(--cover-shadow-a) 0%,
+      var(--cover-shadow-b) 50%,
+      var(--cover-shadow-c) 100%
     );
   }
   .essay.layout-cover:not(.has-image) { background: var(--ink); }
@@ -1106,7 +1168,7 @@
     left: 0; right: 0;
     bottom: 6%;
     height: 22%;
-    background: radial-gradient(ellipse at center, rgba(164,64,26,.18) 0%, transparent 70%);
+    background: radial-gradient(ellipse at center, var(--residue-glow) 0%, transparent 70%);
     filter: blur(14px);
     animation: residue-glow 6s ease-in-out infinite;
   }
@@ -1137,7 +1199,7 @@
     text-transform: uppercase;
     color: var(--ink);
     cursor: none;
-    box-shadow: 0 8px 24px -12px rgba(20, 16, 10, .35);
+    box-shadow: 0 8px 24px -12px var(--pill-shadow);
     transition: background .3s, transform .3s var(--ease);
     max-width: 78vw;
   }
@@ -1195,7 +1257,7 @@
     background: var(--paper);
     border: 1px solid var(--ink);
     border-radius: 14px;
-    box-shadow: 0 16px 40px -16px rgba(20, 16, 10, .45);
+    box-shadow: 0 16px 40px -16px var(--pill-shadow-big);
     opacity: 0;
     transform: translateY(8px);
     pointer-events: none;
@@ -1424,6 +1486,64 @@
     transition: background .3s var(--ease), color .3s var(--ease);
     white-space: nowrap;
   }
+
+  /* ─── Theme toggle ───────────────────────────────────── */
+  .theme-toggle {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    border-radius: 50%;
+    cursor: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+    transition: border-color .3s, background .3s, transform .6s var(--ease-slow);
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .theme-toggle:hover { border-color: var(--ink); background: var(--paper-warm); }
+  .theme-toggle .glyph-day,
+  .theme-toggle .glyph-evening {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1;
+    transition: opacity .6s var(--ease-slow), transform .6s var(--ease-slow);
+  }
+  .theme-toggle .glyph-evening { color: var(--gold); }
+  :root[data-theme="dark"] .theme-toggle .glyph-day     { transform: rotate(30deg); }
+  :root[data-theme="light"] .theme-toggle .glyph-evening { transform: rotate(-30deg); }
+  .theme-toggle-drawer {
+    width: auto;
+    height: auto;
+    border-radius: 100px;
+    padding: 10px 18px;
+    margin-top: 8px;
+    align-self: flex-start;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .theme-toggle-drawer .glyph-day,
+  .theme-toggle-drawer .glyph-evening {
+    position: relative;
+    inset: auto;
+    width: 18px;
+    height: 18px;
+  }
+  .theme-toggle-drawer .theme-label { text-transform: none; letter-spacing: .02em; font-family: var(--italic); font-style: italic; font-size: 14px; color: var(--ink-soft); }
   .book-toggle:hover { background: var(--ink); color: var(--paper); }
   body.is-book .book-toggle { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
@@ -1513,7 +1633,7 @@
   /* Book spine — vertical hairline and subtle shadow at left edge of each page except first */
   body.is-book main.pages > section + section,
   body.is-book main.pages > section + footer {
-    box-shadow: inset 18px 0 36px -28px rgba(20, 16, 10, .22);
+    box-shadow: inset 18px 0 36px -28px var(--spine-shadow);
   }
   body.is-book main.pages > section + section::before,
   body.is-book main.pages > section + footer::before {
@@ -1553,7 +1673,7 @@
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--hairline);
     border-radius: 100px;
-    box-shadow: 0 16px 44px -20px rgba(20, 16, 10, .4);
+    box-shadow: 0 16px 44px -20px var(--pill-shadow-big);
     z-index: 95;
     font-family: var(--mono);
     font-size: 11px;
@@ -1671,6 +1791,10 @@
       <a data-hover href="#archive">Archive</a>
       <a data-hover href="#letter">Letter</a>
       <a data-hover href="#colophon">Colophon</a>
+      <button class="theme-toggle" id="themeToggle" data-hover title="Toggle evening edition">
+        <span class="glyph-day">☼</span>
+        <span class="glyph-evening">☾</span>
+      </button>
       <button class="book-toggle" id="bookToggle" data-hover title="Read as a book">Book  ⇄</button>
     </nav>
     <button class="mobile-menu-btn" id="menuOpen">Menu +</button>
@@ -1686,6 +1810,11 @@
     <a href="#letter">Letter</a>
     <a href="#colophon">Colophon</a>
   </nav>
+  <button class="theme-toggle theme-toggle-drawer" id="themeToggleMobile" data-hover>
+    <span class="glyph-day">☼</span>
+    <span class="glyph-evening">☾</span>
+    <span class="theme-label">evening edition</span>
+  </button>
   <button class="book-toggle book-toggle-drawer" id="bookToggleMobile">Read as a book  ⇄</button>
   <div class="drawer-meta">
     <div id="drawerAtmosphere">—</div>
@@ -2143,6 +2272,9 @@
   }
   updateAtmosphere();
   setInterval(updateAtmosphere, 15000);
+
+  /* ─── Theme toggle ────────────────────────────────── */
+  S.initThemeToggle(['#themeToggle', '#themeToggleMobile'].map(sel => document.querySelector(sel)).filter(Boolean));
 
   /* ─── Mobile drawer ───────────────────────────────── */
   const drawer  = document.getElementById('mobileDrawer');

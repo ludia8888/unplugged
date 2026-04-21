@@ -4,6 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#efe8d6">
+<script>
+  (function () {
+    try {
+      var stored = localStorage.getItem('unplugged:theme');
+      var t = (stored === 'light' || stored === 'dark')
+        ? stored
+        : (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute('content', t === 'dark' ? '#161412' : '#efe8d6');
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  })();
+</script>
 <title id="pageTitle">Essay · Unplugged</title>
 <meta name="description" id="pageDesc" content="An essay from Unplugged — a slow journal.">
 
@@ -37,8 +52,41 @@
 
     --pad-x: clamp(20px, 5vw, 88px);
     --topbar-h: 56px;
+
+    --grain-opacity:   0.18;
+    --grain-blend:     multiply;
+    --breath-warm:     rgba(248, 231, 188, .32);
+    --breath-cool:     rgba(58, 80, 96, .10);
+    --spine-shadow:    rgba(20, 16, 10, .22);
+    --pill-shadow:     rgba(20, 16, 10, .35);
+    --pill-shadow-big: rgba(20, 16, 10, .45);
   }
   @media (max-width: 600px) { :root { --topbar-h: 48px; } }
+
+  :root[data-theme="dark"] {
+    --paper:        #161412;
+    --paper-warm:   #1e1a15;
+    --paper-shade:  #252017;
+    --ink:          #f0e4cc;
+    --ink-soft:     #d9cdb0;
+    --ink-muted:    #8a7f66;
+    --ink-faint:    #5a5342;
+    --hairline:     #3d3728;
+    --hairline-soft:#2a2419;
+    --sienna:       #e08856;
+    --persimmon:    #e8a066;
+    --winter:       #6a859c;
+    --gold:         #e4b884;
+    --frost:        #f5ebd4;
+
+    --grain-opacity:   0.10;
+    --grain-blend:     screen;
+    --breath-warm:     rgba(228, 184, 132, .10);
+    --breath-cool:     rgba(106, 133, 156, .10);
+    --spine-shadow:    rgba(0, 0, 0, .55);
+    --pill-shadow:     rgba(0, 0, 0, .55);
+    --pill-shadow-big: rgba(0, 0, 0, .65);
+  }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
@@ -67,9 +115,12 @@
     inset: 0;
     pointer-events: none;
     z-index: 9999;
-    opacity: 0.18;
-    mix-blend-mode: multiply;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: var(--grain-blend);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.06 0 0 0 0 0.04 0 0 0 .7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  :root[data-theme="dark"] body::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.94 0 0 0 0 0.88 0 0 0 0 0.78 0 0 0 .7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   /* ─── Breathing light ─────────────────────────────────── */
@@ -81,11 +132,11 @@
     z-index: 0;
     background:
       radial-gradient(ellipse 70% 50% at 20% 0%,
-        rgba(248, 231, 188, .32) 0%,
-        rgba(248, 231, 188, 0) 55%),
+        var(--breath-warm) 0%,
+        transparent 55%),
       radial-gradient(ellipse 60% 50% at 85% 100%,
-        rgba(58, 80, 96, .10) 0%,
-        rgba(58, 80, 96, 0) 60%);
+        var(--breath-cool) 0%,
+        transparent 60%);
     animation: breathe 14s ease-in-out infinite;
   }
   @keyframes breathe {
@@ -214,6 +265,39 @@
   }
   .book-toggle:hover { background: var(--ink); color: var(--paper); }
   body.is-book .book-toggle { background: var(--ink); color: var(--paper); }
+
+  .theme-toggle {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    border-radius: 50%;
+    cursor: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+    transition: border-color .3s, background .3s;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .theme-toggle:hover { border-color: var(--ink); background: var(--paper-warm); }
+  .theme-toggle .glyph-day,
+  .theme-toggle .glyph-evening {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1;
+    transition: opacity .6s var(--ease-slow), transform .6s var(--ease-slow);
+  }
+  .theme-toggle .glyph-evening { color: var(--gold); }
+  :root[data-theme="dark"] .theme-toggle .glyph-day     { transform: rotate(30deg); }
+  :root[data-theme="light"] .theme-toggle .glyph-evening { transform: rotate(-30deg); }
 
   /* ─── Article layout ──────────────────────────────────── */
   main.article-root {
@@ -669,7 +753,7 @@
     text-transform: uppercase;
     color: var(--ink);
     cursor: none;
-    box-shadow: 0 8px 24px -12px rgba(20, 16, 10, .35);
+    box-shadow: 0 8px 24px -12px var(--pill-shadow);
     transition: background .3s;
     max-width: 78vw;
   }
@@ -699,7 +783,7 @@
     background: var(--paper);
     border: 1px solid var(--ink);
     border-radius: 14px;
-    box-shadow: 0 16px 40px -16px rgba(20, 16, 10, .45);
+    box-shadow: 0 16px 40px -16px var(--pill-shadow-big);
     opacity: 0;
     transform: translateY(8px);
     pointer-events: none;
@@ -791,7 +875,7 @@
   body.is-book main.article-root > .active-page { opacity: 1; filter: none; }
 
   body.is-book main.article-root > * + * {
-    box-shadow: inset 18px 0 36px -28px rgba(20, 16, 10, .22);
+    box-shadow: inset 18px 0 36px -28px var(--spine-shadow);
   }
   body.is-book main.article-root > * + *::before {
     content: '';
@@ -830,7 +914,7 @@
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--hairline);
     border-radius: 100px;
-    box-shadow: 0 16px 44px -20px rgba(20, 16, 10, .4);
+    box-shadow: 0 16px 44px -20px var(--pill-shadow-big);
     z-index: 95;
     font-family: var(--mono);
     font-size: 11px;
@@ -963,6 +1047,10 @@
     <nav>
       <a data-hover href="index.html#archive">Archive</a>
       <a data-hover href="index.html#letter">Letter</a>
+      <button class="theme-toggle" id="themeToggle" data-hover title="Toggle evening edition">
+        <span class="glyph-day">☼</span>
+        <span class="glyph-evening">☾</span>
+      </button>
       <button class="book-toggle" id="bookToggle" data-hover title="Read as a book">Book  ⇄</button>
     </nav>
   </div>
@@ -1021,6 +1109,7 @@
   initListener();
   initCursor();
   initProgress();
+  S.initThemeToggle('#themeToggle');
   requestAnimationFrame(() => document.body.classList.remove('is-loading'));
 
   /* ─── Article rendering ───────────────────────────── */

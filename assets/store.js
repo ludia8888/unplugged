@@ -9,6 +9,7 @@
   const STORAGE_KEY  = 'unplugged:v1';
   const SESSION_KEY  = 'unplugged:session';
   const PASSWORD_KEY = 'unplugged:pw';
+  const THEME_KEY    = 'unplugged:theme';
 
   /* ── Defaults ─────────────────────────────────────────── */
 
@@ -308,6 +309,86 @@
     });
   }
 
+  /* ── Theme (day / evening) ─────────────────────────── */
+
+  const THEME_META_DAY     = '#efe8d6';
+  const THEME_META_EVENING = '#161412';
+
+  function getStoredTheme() {
+    const t = localStorage.getItem(THEME_KEY);
+    return (t === 'light' || t === 'dark') ? t : null;
+  }
+
+  function setStoredTheme(t) {
+    if (t === 'light' || t === 'dark') localStorage.setItem(THEME_KEY, t);
+    else localStorage.removeItem(THEME_KEY);
+  }
+
+  function systemTheme() {
+    return (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+
+  function resolvedTheme() {
+    return getStoredTheme() || systemTheme();
+  }
+
+  function applyTheme(t) {
+    if (t !== 'light' && t !== 'dark') t = resolvedTheme();
+    document.documentElement.setAttribute('data-theme', t);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', t === 'dark' ? THEME_META_EVENING : THEME_META_DAY);
+    return t;
+  }
+
+  function toggleTheme() {
+    const next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+    setStoredTheme(next);
+    applyTheme(next);
+    return next;
+  }
+
+  /** Wire one or more toggle buttons so they flip between day / evening.
+   *  Accepts a CSS selector string, an array of elements, or a single element.
+   */
+  function initThemeToggle(selector) {
+    let buttons;
+    if (typeof selector === 'string') buttons = Array.from(document.querySelectorAll(selector));
+    else if (Array.isArray(selector)) buttons = selector.filter(Boolean);
+    else if (selector) buttons = [selector];
+    else buttons = [];
+    if (!buttons.length) return;
+
+    const updateAll = () => {
+      const cur = resolvedTheme();
+      buttons.forEach(btn => {
+        btn.setAttribute('aria-pressed', cur === 'dark' ? 'true' : 'false');
+        btn.setAttribute('aria-label', cur === 'dark' ? 'Switch to morning' : 'Switch to evening');
+        const dayGlyph = btn.querySelector('.glyph-day');
+        const evGlyph  = btn.querySelector('.glyph-evening');
+        if (dayGlyph && evGlyph) {
+          dayGlyph.style.opacity = cur === 'dark' ? '0' : '1';
+          evGlyph.style.opacity  = cur === 'dark' ? '1' : '0';
+        }
+        const lbl = btn.querySelector('.theme-label');
+        if (lbl) lbl.textContent = cur === 'dark' ? 'morning edition' : 'evening edition';
+      });
+    };
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => { toggleTheme(); updateAll(); });
+    });
+
+    // Follow system if user hasn't picked explicitly
+    if (window.matchMedia) {
+      const mql = matchMedia('(prefers-color-scheme: dark)');
+      const handler = () => { if (!getStoredTheme()) { applyTheme(); updateAll(); } };
+      if (mql.addEventListener) mql.addEventListener('change', handler);
+      else if (mql.addListener) mql.addListener(handler);
+    }
+
+    updateAll();
+  }
+
   function storageUsage() {
     try {
       let bytes = 0;
@@ -509,6 +590,8 @@
     slugifyCategory,
     // images
     readImageFile, storageUsage,
+    // theme
+    getStoredTheme, setStoredTheme, resolvedTheme, applyTheme, toggleTheme, initThemeToggle,
     // auth
     hasPassword, setPassword, checkPassword, login, logout, isLoggedIn,
     // utils
