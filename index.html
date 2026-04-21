@@ -422,6 +422,19 @@
     margin-top: 12px;
     font-feature-settings: 'dlig';
   }
+  /* Chapter folios — I / II / III / IV — sit above each section's eyebrow,
+     in small italic serif. Reads like a Penguin Classics chapter mark. */
+  .section-folio {
+    font-family: var(--italic);
+    font-style: italic;
+    font-size: clamp(20px, 2vw, 26px);
+    line-height: 1;
+    color: var(--sienna);
+    opacity: .65;
+    letter-spacing: -.01em;
+    margin-bottom: 16px;
+    font-feature-settings: 'onum';
+  }
 
   /* ─── Featured essay ─────────────────────────────────── */
   .featured {
@@ -2051,6 +2064,7 @@
 <section class="featured shell" id="featured">
   <div class="section-head reveal">
     <div>
+      <div class="section-folio">I.</div>
       <div class="section-label">§ In Residence — the essay at hand</div>
       <h2 class="section-title">The essay at hand</h2>
     </div>
@@ -2063,6 +2077,7 @@
 <section class="dispatches shell">
   <div class="section-head reveal">
     <div>
+      <div class="section-folio">II.</div>
       <div class="section-label">§ Recent Dispatches</div>
       <h2 class="section-title">Thinking, lately</h2>
     </div>
@@ -2078,6 +2093,7 @@
 <section class="archive shell" id="archive">
   <div class="section-head reveal">
     <div>
+      <div class="section-folio">III.</div>
       <div class="section-label">§ The Back Catalog</div>
       <h2 class="section-title">Everything, kept</h2>
     </div>
@@ -2105,6 +2121,7 @@
 <section class="notes shell">
   <div class="section-head reveal">
     <div>
+      <div class="section-folio">IV.</div>
       <div class="section-label">§ Notes from the Margins</div>
       <h2 class="section-title">Small things kept</h2>
     </div>

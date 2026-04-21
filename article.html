@@ -1527,7 +1527,13 @@
     document.getElementById('pageTitle').textContent =
       `${stripTags(e.titleHtml || e.title || 'Essay')} · Unplugged`;
     document.getElementById('pageDesc').setAttribute('content', stripTags(e.dek || '') || 'An essay from Unplugged.');
-    document.getElementById('essayMark').textContent = `Essay  ·  № ${e.number}`;
+    // Running head — like a magazine page header: Vol. 01 · № 047 · Spring Issue
+    const mast = settings.masthead || {};
+    const volMatch = String(mast.issue || '').match(/Vol\.\s*[A-Za-z0-9]+/i);
+    const vol = volMatch ? volMatch[0] : '';
+    const seasonRaw = String(mast.season || '').split('·')[0].trim();
+    document.getElementById('essayMark').textContent =
+      [vol, `№ ${e.number}`, seasonRaw].filter(Boolean).join('  ·  ');
 
     // navigation context
     const all = S.getPublishedEssays();                 // newest first
